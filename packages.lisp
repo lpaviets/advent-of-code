@@ -11,7 +11,10 @@
     (let ((list (loop :for i :from 1 :to 25
                       :collect
                       `(defpackage ,(symb :aoc2021 "/EX" i)
-                         (:use :cl :aoc2021)))))
+                         (:use :cl :aoc2021)
+                         (:export
+                          ,(symb :answer-ex- i :-1)
+                          ,(symb :answer-ex- i :-2))))))
       `(progn
          ,@list))))
 
