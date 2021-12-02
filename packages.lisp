@@ -1,5 +1,14 @@
 ;;;; package.lisp
 
+(defpackage #:aoc2021
+  (:use #:cl)
+  (:export
+   #:read-file-as-lines
+   #:read-file-as-integers
+   #:split-word-int))
+
+(in-package #:aoc2021)
+
 (defmacro gen-packages ()
   (labels ((mkstr (&rest args)
              (with-output-to-string (s)
@@ -17,12 +26,5 @@
                           ,(symb :answer-ex- i :-2))))))
       `(progn
          ,@list))))
-
-(defpackage #:aoc2021
-  (:use #:cl)
-  (:export
-   #:read-file-as-lines
-   #:read-file-as-integers
-   #:split-word-int))
 
 (gen-packages)
