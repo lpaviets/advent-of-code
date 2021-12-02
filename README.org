@@ -1,0 +1,6 @@
+* AoC 2021
+This repository contains (some) solutions to the AoC 2021 problems.
+
+Everything is done using Common Lisp.
+
+Dependencies are kept as low as possible, using only [[https://edicl.github.io/cl-ppcre/][cl-ppcre]] to deal with the input parsing, and [[https://common-lisp.net/project/alexandria/][Alexandria]] if it is really unavoidable.
