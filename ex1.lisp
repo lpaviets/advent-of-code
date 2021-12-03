@@ -2,8 +2,7 @@
 
 (defun count-increased (list)
   (loop :for (a b) :on list
-        :if b
-          :count (> b a)))
+        :count (and b (> b a))))
 
 (defun answer-ex-1-1 ()
   (count-increased
@@ -11,9 +10,8 @@
 
 (defun count-mean-increased (list)
   (loop :for (a b c d) :on list
-        :if d
-          :count (> (+ b c d)
-                    (+ a b c))))
+        :count (and d (> (+ b c d)
+                         (+ a b c)))))
 
 (defun answer-ex-1-2 ()
   (count-mean-increased

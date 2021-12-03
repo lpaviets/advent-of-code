@@ -1,68 +1,82 @@
 (in-package #:aoc2021/ex3)
 
+(defun pick-frequent-digit (list &optional default)
+  (case (signum (- (count #\0 list)
+                   (count #\1 list)))
+    (1 #\0)
+    (-1 #\1)
+    (0 default)))
+
 (defun accumulate-digits (list)
-  (let ((count-digits (make-array 12
-                                  :element-type 'integer
-                                  :initial-element 0)))
-    (loop :for line :in list
-          :do
-             (loop :for i :below 12
-                   :for char = (char line i)
-                   :when (char= #\0 char)
-                     :do (incf (aref count-digits i))))
-    count-digits))
+  (map 'string
+       'pick-frequent-digit
+       (apply 'map 'list 'list list)))
 
-(defun get-gamma (list)
-  (let* ((majority (/ (length list) 2))
-         (counts (accumulate-digits list))
-         (most-common (map 'string
-                           (lambda (x)
-                             (if (> x majority) #\1 #\0))
-                           counts)))
-    (parse-integer most-common :radix 2)))
+(defun gamma (list)
+  (parse-integer (accumulate-digits list) :radix 2))
 
-(defun get-epsilon (list)
-  (let* ((majority (/ (length list) 2))
-         (counts (accumulate-digits list))
-         (most-common (map 'string
-                           (lambda (x)
-                             (if (> x majority) #\0 #\1))
-                           counts)))
-    (parse-integer most-common :radix 2)))
+(defun epsilon (list)
+  (let ((flip (map 'string
+                    (flip #\0 #\1)
+                    (accumulate-digits list))))
+    (parse-integer flip :radix 2)))
 
 ;; Part 2
 
-(defun filter-common (list pos most-or-least)
-  (let ((select-digit (loop :for line :in list
-                            :for char = (char line pos)
-                            :if (char= #\0 char)
-                              :count 1 :into zeros
-                            :else
-                              :count 1 :into ones
-                            :finally (return (if (eq most-or-least :most)
-                                                 (if (>= ones zeros) #\1 #\0)
-                                                 (if (> zeros ones) #\1 #\0))))))
-    (loop :for line :in list
-          :for char = (char line pos)
-          :if (char= select-digit char)
-            :collect line)))
+(defun filter-select-digit (list pos most-or-least)
+  (let ((list-chars (mapcar (lambda (line) (char line pos)) list)))
+    (if (eq most-or-least :most)
+        (pick-frequent-digit list-chars #\1)
+        (funcall (flip #\0 #\1) (pick-frequent-digit list-chars #\1)))))
 
-(defun get-oxygen (list)
+(defun filter-common (list pos most-or-least)
+  (loop :with select-digit = (filter-select-digit list pos most-or-least)
+        :for line :in list
+        :if (char= select-digit (char line pos))
+          :collect line))
+
+(defun oxygen (list)
   (do ((i 0 (1+ i))
        (filtered list (filter-common filtered i :most)))
       ((not (cdr filtered)) (parse-integer (car filtered) :radix 2))))
 
-(defun get-co2 (list)
+(defun co2 (list)
   (do ((i 0 (1+ i))
        (filtered list (filter-common filtered i :least)))
       ((not (cdr filtered)) (parse-integer (car filtered) :radix 2))))
 
 (defun answer-ex-3-1 ()
   (let ((list (read-file-as-lines "inputs/input3.txt")))
-    (* (get-gamma list)
-       (get-epsilon list))))
+    (* (gamma list)
+       (epsilon list))))
 
 (defun answer-ex-3-2 ()
   (let ((list (read-file-as-lines "inputs/input3.txt")))
-    (* (get-oxygen list)
-       (get-co2 list))))
+    (* (oxygen list)
+       (co2 list))))
+
+
+;;; Alternative hackish version
+
+(defun %sum-char (x y)
+  (- (+ x (char-code y))
+     (+ 0.5 (char-code #\0))))
+
+(defun %sum-array (x y)
+  (map 'vector '%sum-char x y))
+
+(defun %sum-lines (lines)
+  (reduce '%sum-array lines :initial-value (make-array 12 :initial-element 0)))
+
+(defun %most-common (lines)
+  (map 'string
+       (lambda (x)
+         (if (plusp x) #\0 #\1))
+       (%sum-lines lines)))
+
+(defun %gamma (lines)
+  (parse-integer (%most-common lines) :radix 2))
+
+(defun %epsilon (lines)
+  (parse-integer (map 'string (flip #\0 #\1) (%most-common lines))
+                 :radix 2))

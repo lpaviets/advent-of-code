@@ -5,7 +5,8 @@
   (:export
    #:read-file-as-lines
    #:read-file-as-integers
-   #:split-word-int))
+   #:split-word-int
+   #:flip))
 
 (in-package #:aoc2021)
 

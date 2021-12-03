@@ -17,3 +17,7 @@
   (ppcre:register-groups-bind (word (#'parse-integer int))
       ("\(\\w+\) \(\\d+\)" line)
     (cons word int)))
+
+(defun flip (x y &optional (comp 'equal))
+  (lambda (z)
+    (if (funcall comp x z) y x)))
