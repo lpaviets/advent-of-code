@@ -6,7 +6,9 @@
    #:read-file-as-lines
    #:read-file-as-integers
    #:split-word-int
-   #:flip))
+   #:flip
+   #:do-array
+   #:do-line))
 
 (in-package #:aoc2021)
 

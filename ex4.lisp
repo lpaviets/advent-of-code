@@ -30,15 +30,6 @@
                 *bingo-boards-marks*)
         :finally (setf *bingo-boards* (nreverse *bingo-boards*))))
 
-(defmacro do-array ((i j x array) &body body)
-  (let ((garray (gensym)))
-    `(let ((,garray ,array))
-       (loop :for ,i :below (array-dimension ,garray 0)
-             :do
-             (loop :for ,j :below (array-dimension ,garray 1)
-                   :for ,x = (aref ,garray ,i ,j)
-                   :do ,@body)))))
-
 (defun draw-number (n)
   (loop :for board :in *bingo-boards*
         :for marked :in *bingo-boards-marks*
