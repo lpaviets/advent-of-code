@@ -2,6 +2,8 @@
 
 (in-package #:aoc2021)
 
+;;; Parsing
+
 (defun read-file-as-lines (filename &key (parse 'identity))
   "Read file into a list of lines."
   (with-open-file (in filename)
@@ -17,6 +19,11 @@
   (ppcre:register-groups-bind (word (#'parse-integer int))
       ("\(\\w+\) \(\\d+\)" line)
     (cons word int)))
+
+(defun coma-separated-int-line (line)
+  (mapcar 'parse-integer (ppcre:split " *, *" line)))
+
+;;; Utilities
 
 (defun flip (x y &optional (comp 'equal) (keep-others t))
   "Return a function of one argument which swaps X and Y

@@ -5,6 +5,7 @@
   (:export
    #:read-file-as-lines
    #:read-file-as-integers
+   #:coma-separated-int-line
    #:split-word-int
    #:flip
    #:do-array
