@@ -35,25 +35,21 @@
     (list entries goal)))
 
 (defun compatible-p (num encoding sol)
-  "Suppose SOL is in order. Check whether the number NUM could be encoded
+  "Assume SOL in order. Check whether the number NUM could be encoded
 by ENCODING with the partial solution SOL"
   (let ((segs (aref +segments+ num)))
     (when (= (length encoding) (length segs))
-      (and
-       ;; Check that all activated wire of ENCODING are actually
-       ;; linked to segments that should be "on" if this way the number
-       ;; NUM
-       (loop :for wire :in encoding ; x = sol[i] <-> wire i is controlling seg x
-             :for seg = (nth wire sol)
-             :always (or (not seg)
-                         (member seg segs)))
-       ;; Check that all the wires of SOL linked to segments that should
-       ;; NOT be "on" are indeed not part of the encoding
-       ;; (loop :for seg :in solution
-       ;;       :for wire :from 0
-       ;;       :always (when (member seg segs)
-       ;;                 (member wire encoding)))
-       ))))
+      ;; Check that all activated wire of ENCODING are actually
+      ;; linked to segments that should be "on" if this way the number
+      ;; NUM
+      ;; Could do more tests to reduce the number of "wrong" guesses
+      ;; Only important thing is to return NIL for a bad "full" solution,
+      ;; and non-NIL for the correct one
+      ;; Further improvements are only optimisations, not requirements
+      (loop :for wire :in encoding ; x = sol[i] <-> wire i is controlling seg x
+            :for seg = (nth wire sol)
+            :always (or (not seg)
+                        (member seg segs))))))
 
 (defun compatible-nums (encoding sol)
   (loop :for i :upto 9
@@ -110,3 +106,40 @@ elements in INPUT"
           :for (input goals) = (parse-input-2 line)
           :for sol = (reverse (guess 0 nil input))
           :sum (decode-goals goals sol))))
+
+(defun alternative-answer-ex-8-2 ()
+  "Bruteforce version with all permutations tested one by one"
+  (let ((list (read-file-as-lines "inputs/input8.txt")))
+    (loop :with perms = (permutations 6)
+          :for line :in list
+          :for (input goals) = (parse-input-2 line)
+          :for sol = (loop :for perm :in perms
+                           :thereis (and (check perm input)
+                                         (reverse perm)))
+          :sum (decode-goals goals sol))))
+
+;;; Comparison:
+;; Number of calls to the `check' function on my own input file:
+;; Total for clever version: 32227
+;; Total for brutef version: 552272
+
+;; Bruteforce version seems more than 10* worse
+;; More objective comparison with the `time' macro:
+
+;; AOC2021/EX8> (time (answer-ex-8-2))
+;; Evaluation took:
+;;   0.059 seconds of real time
+;;   0.061216 seconds of total run time (0.061216 user, 0.000000 system)
+;;   [ Run times consist of 0.005 seconds GC time, and 0.057 seconds non-GC time. ]
+;;   103.39% CPU
+;;   207,192,294 processor cycles
+;;   9,731,248 bytes consed
+
+;; AOC2021/EX8> (time (alternative-answer-ex-8-2))
+;; Evaluation took:
+;;   0.255 seconds of real time
+;;   0.258004 seconds of total run time (0.254774 user, 0.003230 system)
+;;   [ Run times consist of 0.018 seconds GC time, and 0.241 seconds non-GC time. ]
+;;   101.18% CPU
+;;   876,856,936 processor cycles
+;;   70,830,640 bytes consed

@@ -8,6 +8,7 @@
    #:coma-separated-int-line
    #:split-word-int
    #:flip
+   #:permutations
    #:do-array
    #:do-line))
 

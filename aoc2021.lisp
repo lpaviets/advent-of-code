@@ -36,6 +36,21 @@ Otherwise, elements that are not X nor Y are mapped to Y"
       (keep-others z)
       (t y))))
 
+(defun permutations (n)
+  "List of all the permutations of the integers between 0 and n included"
+  (if (zerop n)
+      (list '(0))
+      (loop :with perms = (permutations (1- n))
+            :for perm :in perms
+            :append
+            (loop :repeat (1+ n)
+                  :for (beg end) = (list nil perm)
+                    :then (list (cons (car end) beg)
+                                (cdr end))
+                  :collect (append beg (list n) end)))))
+
+;;; Useful macros
+
 (defmacro do-array ((i j x array) &body body)
   "Iterate over a 2D array.
 In the BODY:
