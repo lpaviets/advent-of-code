@@ -1,33 +1,5 @@
 (in-package #:aoc2021/ex9)
 
-(defun parse-input (list)
-  (let* ((height (length list))
-         (width (length (car list)))
-         (array (make-array (list height width))))
-    (loop :for line :in list
-          :for h ::from 0 :do
-            (loop :for c :across line
-                  :for val = (- (char-int c) (char-int #\0))
-                  :for w :from 0
-                  :do (setf (aref array h w) val)))
-    array))
-
-(defun valid-pos-p (pos height width)
-  (and (<= 0 (car pos) (1- height))
-       (<= 0 (cadr pos) (1- width))))
-
-(defun neighbours (i j array)
-  (let ((height (array-dimension array 0))
-        (width (array-dimension array 1))
-        neighbours)
-    (dolist (pos `((,(1- i) ,j)
-                   (,i ,(1- j))
-                   (,i ,(1+ j))
-                   (,(1+ i) ,j)))
-      (when (valid-pos-p pos height width)
-        (push pos neighbours)))
-    neighbours))
-
 (defun low-point-p (i j array)
   (let ((neighbours (neighbours i j array)))
     (loop :with val = (aref array i j)
@@ -72,7 +44,7 @@
 
 (defun answer-ex-9-1 ()
   (let* ((list (read-file-as-lines "inputs/input9.txt"))
-         (array (parse-input list))
+         (array (read-array list))
          (total-risk 0))
     (do-array (i j x array)
       (when (low-point-p i j array)
@@ -81,7 +53,7 @@
 
 (defun answer-ex-9-2 ()
   (let* ((list (read-file-as-lines "inputs/input9.txt"))
-         (array (parse-input list))
+         (array (read-array list))
          (basins (all-basins array))
          (large (largest-basins basins 3)))
     (apply '* large)))

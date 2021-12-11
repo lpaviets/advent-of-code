@@ -23,6 +23,21 @@
 (defun coma-separated-int-line (line)
   (mapcar 'parse-integer (ppcre:split " *, *" line)))
 
+(defun read-array (list &optional (digits t))
+  "Read a 2D-array. If DIGITS is non-nil, parses elements as digits"
+  (loop :with array = (make-array (list (list-length list)
+                                        (length (car list))))
+        :for line :in list
+        :for i :from 0 :do
+          (loop :for c :across line
+                :for j :from 0
+                :for val = (if digits
+                               (- (char-int c) (char-int #\0))
+                               c)
+                :do
+                   (setf (aref array i j) val))
+        :finally (return array)))
+
 ;;; Utilities
 
 (defun flip (x y &optional (comp 'equal) (keep-others t))
@@ -49,9 +64,37 @@ Otherwise, elements that are not X nor Y are mapped to Y"
                                 (cdr end))
                   :collect (append beg (list n) end)))))
 
+
+(defun valid-position (i j h w)
+  (and (<= 0 i (1- h))
+       (<= 0 j (1- w))))
+
+(defun neighbours (i j array &key diagonal self)
+  "List of positions of the neighbours of (I J) in ARRAY
+If DIAGONAL is non-nil, includes the diagonally adjacent neighbours
+If SELF is non-nil, include (I J) too"
+  (let ((height (array-dimension array 0))
+        (width (array-dimension array 1))
+        neighbours)
+    (dotimes (x 3)
+      (dotimes (y 3)
+        (let ((next-x (1- (+ x i)))
+              (next-y (1- (+ y j))))
+          (when (and (or (not (= x y 1)) self)
+                     (and (or diagonal
+                              (= next-x i)
+                              (= next-y j)))
+                     (valid-position next-x
+                                     next-y
+                                     height
+                                     width))
+            (push (list next-x next-y)
+                  neighbours)))))
+    neighbours))
+
 ;;; Useful macros
 
-(defmacro do-array ((i j x array) &body body)
+(defmacro do-array ((i j x array &optional return) &body body)
   "Iterate over a 2D array.
 In the BODY:
 I, J are respectively bound to the first and second coordinate at each step
@@ -62,7 +105,8 @@ X is bound the array[i][j] := (aref array i j)"
              :do
                 (loop :for ,j :below (array-dimension ,garray 1)
                       :for ,x = (aref ,garray ,i ,j)
-                      :do ,@body)))))
+                      :do ,@body))
+       ,return)))
 
 (defmacro do-line ((i j &key (step 1)) (x1 y1) (x2 y2) &body body)
   "Iterate over a line, given as a pair of coordinates

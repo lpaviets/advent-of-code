@@ -7,6 +7,8 @@
    #:read-file-as-integers
    #:coma-separated-int-line
    #:split-word-int
+   #:read-array
+   #:neighbours
    #:flip
    #:permutations
    #:do-array
