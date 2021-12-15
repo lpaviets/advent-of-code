@@ -6,7 +6,7 @@
   :license  "Specify license here"
   :version "0.0.1"
   :serial t
-  :depends-on (#:cl-ppcre)
+  :depends-on (#:cl-ppcre #:heap)
   :components ((:file "packages")
                (:file "aoc2021")
                (:file "ex1")

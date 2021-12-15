@@ -92,6 +92,36 @@ If SELF is non-nil, include (I J) too"
                   neighbours)))))
     neighbours))
 
+(defun extremum (list predicate &key key)
+  "Return the value of the element for the comparison operator PREDICATE in
+LIST. If KEY is non-NIL, PREDICATE is applied to (KEY ELEMENT) instead of
+ELEMENT at each step"
+  (when list
+    (let* ((element (first list))
+           (val (if key (funcall key element) element)))
+      (mapc (lambda (x)
+              (let ((val-x (if key (funcall key x) x)))
+                (when (funcall predicate val-x val)
+                  (psetf element x
+                         val val-x))))
+            list)
+      element)))
+
+(defun extremum-array (array predicate &key key)
+  "Return the position in the 2D-array ARRAY for which the value of
+(KEY (ARRAY[pos] &optional POS) is minimal for the order induced by PREDICATE
+KEY is a function of 1 mandatory argument (the value of ARRAY at position POS)
+and one optional one (the position, given as a list of length 2)"
+  (let* ((pos '(0 0))
+         (val-pos (aref array 0 0))
+         (val-min (if key (funcall key val-pos '(0 0)) val-pos)))
+    (do-array (i j x array)
+      (let ((val-x (if key (funcall key x (list i j)) x)))
+        (when (funcall predicate val-x val-min)
+          (psetf pos (list i j)
+                 val-min val-x))))
+    pos))
+
 ;;; Useful macros
 
 (defmacro do-array ((i j x array &optional return) &body body)

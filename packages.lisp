@@ -11,6 +11,8 @@
    #:neighbours
    #:flip
    #:permutations
+   #:extremum
+   #:extremum-array
    #:do-array
    #:do-line))
 
