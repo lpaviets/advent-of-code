@@ -2,9 +2,12 @@
 ;;; It creates a whole lot of files, filled with some code
 
 (defun create-files-templates ()
-  (loop :initially (ensure-directories-exist "src/")
+  (loop :initially (let ((src-dir (make-pathname :directory '(:relative "src"))))
+                     (ensure-directories-exist src-dir))
         :for i :from 1 :to 25
-        :for filename = (format nil "src/ex~a.lisp" i)
+        :for filename = (make-pathname :directory '(:relative "src")
+                                       :name (format nil "ex~a" i)
+                                       :type "lisp")
         :unless (probe-file filename)
           :do
              (format t "Creating file ~a~%" filename)
