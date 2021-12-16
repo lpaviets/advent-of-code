@@ -1,41 +1,31 @@
 (in-package #:aoc2021/ex15)
 
 (defun fill-lowest-risk-heap (array)
-  "Djikstra algorithm
-Uses a heap data structure, partially mine"
+  "Dijkstra algorithm. Uses a binary heap for prio queue"
   (let ((height (array-dimension array 0))
         (width (array-dimension array 1))
         (target (mapcar '1- (array-dimensions array)))
         (distance (make-array (array-dimensions array)
                               :initial-element most-positive-fixnum))
-        (parent (make-array (array-dimensions array)))
-        (array-queue (make-array (array-dimensions array)
-                                 :initial-element t)))
-    (declare (special distance))
-    (setf (aref distance 0 0) 0)
-    (let ((heap (heap:make-heap #'<
-                                :key (lambda (u)
-                                       (declare (special distance))
-                                       (aref distance (first u) (second u))))))
+        (parent (make-array (array-dimensions array))))
 
-      (do-array (i j x array)
-        (heap:heap-push (list i j) heap))
+    (let ((heap (heap:make-heap '< :key 'third))) ; x y distance
+      (setf (aref distance 0 0) 0)        ; Initialize
+      (heap:heap-push (list 0 0 0) heap)
 
       (loop :while (heap:heap-peek heap)
             :for i :from 0
             :for best = (heap:heap-pop heap)
-            :for (x y) = best
-            :when (zerop (mod i 1000))
-              :do (format t "Already ~a steps done~%" i)
-            :do (setf (aref array-queue x y) nil)
-                (loop :for (i j) :in (neighbours x y array)
-                      :for dist = (+ (aref distance x y)
-                                     (aref array i j))
-                      :when (and (< dist (aref distance i j))
-                                 (aref array-queue i j))
-                        :do (setf (aref distance i j) dist)
-                            (heap:heap-update (list i j) heap :test 'equal)
-                            (setf (aref parent i j) best))
+            :for (x y d) = best
+            :for curr-dist = (aref distance x y)
+            :when (= d curr-dist) :do
+              (loop :for (i j) :in (neighbours x y array)
+                    :for dist = (+ (aref distance x y)
+                                   (aref array i j))
+                    :when (< dist (aref distance i j))
+                      :do (setf (aref distance i j) dist)
+                          (heap:heap-push (list i j dist) heap)
+                          (setf (aref parent i j) best))
             :until (equal best target)))
 
     (loop :for (x y) = (list (1- height) (1- width))
