@@ -62,11 +62,11 @@
                               (completion-points-stack stack)))))
 
 (defun answer-ex-10-1 ()
-  (let ((list (read-file-as-lines "inputs/input10.txt")))
+  (let ((list (read-file-as-lines "../inputs/input10.txt")))
     (apply '+ (mapcar 'read-sentence list))))
 
 (defun answer-ex-10-2 ()
-  (let* ((list (read-file-as-lines "inputs/input10.txt"
+  (let* ((list (read-file-as-lines "../inputs/input10.txt"
                                    ))
          (points (loop :for line :in list
                        :for pts = (completion-points-sentence line)

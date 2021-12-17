@@ -50,12 +50,12 @@
     big-array))
 
 (defun answer-ex-15-1 ()
-  (let* ((list (read-file-as-lines "inputs/input15.txt"))
+  (let* ((list (read-file-as-lines "../inputs/input15.txt"))
          (array (read-array list)))
     (fill-lowest-risk-heap array)))
 
 (defun answer-ex-15-2 ()
-  (let* ((list (read-file-as-lines "inputs/input15.txt"))
+  (let* ((list (read-file-as-lines "../inputs/input15.txt"))
          (array (read-array list))
          (big-array (build-big-array array)))
     (fill-lowest-risk-heap big-array)))

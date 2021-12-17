@@ -205,11 +205,11 @@ See `read-packet'"
     val))
 
 (defun answer-ex-16-1 ()
-  (let* ((line (car (read-file-as-lines "inputs/input16.txt")))
+  (let* ((line (car (read-file-as-lines "../inputs/input16.txt")))
          (packet (read-hex-packet line 0)))
     (sum-packets-version packet)))
 
 (defun answer-ex-16-2 ()
-    (let* ((line (car (read-file-as-lines "inputs/input16.txt")))
+    (let* ((line (car (read-file-as-lines "../inputs/input16.txt")))
            (packet (read-hex-packet line 0)))
       (operate packet 0 t)))

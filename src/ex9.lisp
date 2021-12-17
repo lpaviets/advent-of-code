@@ -43,7 +43,7 @@
     (subseq (sort large-basins '>) 0 how-many)))
 
 (defun answer-ex-9-1 ()
-  (let* ((list (read-file-as-lines "inputs/input9.txt"))
+  (let* ((list (read-file-as-lines "../inputs/input9.txt"))
          (array (read-array list))
          (total-risk 0))
     (do-array (i j x array)
@@ -52,7 +52,7 @@
     total-risk))
 
 (defun answer-ex-9-2 ()
-  (let* ((list (read-file-as-lines "inputs/input9.txt"))
+  (let* ((list (read-file-as-lines "../inputs/input9.txt"))
          (array (read-array list))
          (basins (all-basins array))
          (large (largest-basins basins 3)))

@@ -95,7 +95,7 @@ step, starting from the chain \"AB\"")
                  (return freqs)))))
 
 (defun answer-ex-14-1 ()
-  (let* ((list (read-file-as-lines "inputs/input14.txt"))
+  (let* ((list (read-file-as-lines "../inputs/input14.txt"))
          (start-chain (starting-chain list)))
     (parse-rules (cddr list))
     (let ((final-chain (loop :repeat 10
@@ -104,7 +104,7 @@ step, starting from the chain \"AB\"")
       (most-minus-less-frequent (frequencies final-chain)))))
 
 (defun answer-ex-14-2 ()
-  (let* ((list (read-file-as-lines "inputs/input14.txt"))
+  (let* ((list (read-file-as-lines "../inputs/input14.txt"))
          (start-chain (starting-chain list)))
     (parse-rules (cddr list))
     (init-hash-table)

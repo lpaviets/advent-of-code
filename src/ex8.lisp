@@ -1,15 +1,15 @@
 (in-package #:aoc2021/ex8)
 
-(defconstant +segments+ (make-array 10 :initial-contents '((0 1 2 4 5 6)
-                                                          (2 5)
-                                                          (0 2 3 4 6)
-                                                          (0 2 3 5 6)
-                                                          (1 2 3 5)
-                                                          (0 1 3 5 6)
-                                                          (0 1 3 4 5 6)
-                                                          (0 2 5)
-                                                          (0 1 2 3 4 5 6)
-                                                          (0 1 2 3 5 6))))
+(defparameter *segments* (make-array 10 :initial-contents '((0 1 2 4 5 6)
+                                                            (2 5)
+                                                            (0 2 3 4 6)
+                                                            (0 2 3 5 6)
+                                                            (1 2 3 5)
+                                                            (0 1 3 5 6)
+                                                            (0 1 3 4 5 6)
+                                                            (0 2 5)
+                                                            (0 1 2 3 4 5 6)
+                                                            (0 1 2 3 5 6))))
 
 (defun parse-input (line)
   (let ((pos (search "|" line)))
@@ -37,7 +37,7 @@
 (defun compatible-p (num encoding sol)
   "Assume SOL in order. Check whether the number NUM could be encoded
 by ENCODING with the partial solution SOL"
-  (let ((segs (aref +segments+ num)))
+  (let ((segs (aref *segments* num)))
     (when (= (length encoding) (length segs))
       ;; Check that all activated wire of ENCODING are actually
       ;; linked to segments that should be "on" if this way the number
@@ -85,7 +85,7 @@ elements in INPUT"
                                    :collect (nth wire sol))
                              '<)))
     (loop :for i :upto 9
-          :for segments-i = (aref +segments+ i)
+          :for segments-i = (aref *segments* i)
           :thereis (and (equal segments-i segments-code)
                          i))))
 
@@ -96,12 +96,12 @@ elements in INPUT"
         :finally (return result)))
 
 (defun answer-ex-8-1 ()
-  (let ((list (read-file-as-lines "inputs/input8.txt" :parse 'parse-input)))
+  (let ((list (read-file-as-lines "../inputs/input8.txt" :parse 'parse-input)))
     (loop :for line :in list
           :sum (count-if 'unique-p line))))
 
 (defun answer-ex-8-2 ()
-  (let ((list (read-file-as-lines "inputs/input8.txt")))
+  (let ((list (read-file-as-lines "../inputs/input8.txt")))
     (loop :for line :in list
           :for (input goals) = (parse-input-2 line)
           :for sol = (reverse (guess 0 nil input))
@@ -109,7 +109,7 @@ elements in INPUT"
 
 (defun alternative-answer-ex-8-2 ()
   "Bruteforce version with all permutations tested one by one"
-  (let ((list (read-file-as-lines "inputs/input8.txt")))
+  (let ((list (read-file-as-lines "../inputs/input8.txt")))
     (loop :with perms = (permutations 6)
           :for line :in list
           :for (input goals) = (parse-input-2 line)

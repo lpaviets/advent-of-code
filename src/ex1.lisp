@@ -6,7 +6,7 @@
 
 (defun answer-ex-1-1 ()
   (count-increased
-   (read-file-as-integers "inputs/input1.txt")))
+   (read-file-as-integers "../inputs/input1.txt")))
 
 (defun count-mean-increased (list)
   (loop :for (a b c d) :on list
@@ -15,4 +15,4 @@
 
 (defun answer-ex-1-2 ()
   (count-mean-increased
-   (read-file-as-integers "inputs/input1.txt")))
+   (read-file-as-integers "../inputs/input1.txt")))

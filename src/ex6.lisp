@@ -28,11 +28,11 @@
     (setf array (make-timestep array))))
 
 (defun answer-ex-6-1 ()
-  (let* ((line (car (read-file-as-lines "inputs/input6.txt")))
+  (let* ((line (car (read-file-as-lines "../inputs/input6.txt")))
          (array (parse-input line)))
     (loop :for c :across (update-for-days array 80) :sum c)))
 
 (defun answer-ex-6-2 ()
-  (let* ((line (car (read-file-as-lines "inputs/input6.txt")))
+  (let* ((line (car (read-file-as-lines "../inputs/input6.txt")))
          (array (parse-input line)))
     (loop :for c :across (update-for-days array 256) :sum c)))

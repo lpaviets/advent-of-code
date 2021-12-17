@@ -35,11 +35,11 @@
                       i)))
 
 (defun answer-ex-11-1 ()
-  (let* ((list (read-file-as-lines "inputs/input11.txt"))
+  (let* ((list (read-file-as-lines "../inputs/input11.txt"))
          (array (read-array list)))
     (all-steps array)))
 
 (defun answer-ex-11-2 ()
-    (let* ((list (read-file-as-lines "inputs/input11.txt"))
+    (let* ((list (read-file-as-lines "../inputs/input11.txt"))
          (array (read-array list)))
       (first-sync array)))

@@ -18,11 +18,11 @@
         :sum (/ (* dist (1+ dist)) 2)))
 
 (defun answer-ex-7-1 ()
-  (let ((list (car (read-file-as-lines "inputs/input7.txt"
+  (let ((list (car (read-file-as-lines "../inputs/input7.txt"
                                        :parse 'coma-separated-int-line))))
     (least-total-fuel list)))
 
 (defun answer-ex-7-2 ()
-  (let ((list (car (read-file-as-lines "inputs/input7.txt"
+  (let ((list (car (read-file-as-lines "../inputs/input7.txt"
                                        :parse 'coma-separated-int-line))))
     (least-total-fuel list 'total-fuel-expensive)))

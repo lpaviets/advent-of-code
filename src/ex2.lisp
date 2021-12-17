@@ -28,9 +28,9 @@
         :finally (return (* horiz depth))))
 
 (defun answer-ex-2-1 ()
-  (let ((list (read-file-as-lines "inputs/input2.txt" :parse 'split-word-int)))
+  (let ((list (read-file-as-lines "../inputs/input2.txt" :parse 'split-word-int)))
     (total-horiz-depth list)))
 
 (defun answer-ex-2-2 ()
-  (let ((list (read-file-as-lines "inputs/input2.txt" :parse 'split-word-int)))
+  (let ((list (read-file-as-lines "../inputs/input2.txt" :parse 'split-word-int)))
     (total-horiz-depth-aim list)))

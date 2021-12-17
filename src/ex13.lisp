@@ -43,13 +43,13 @@
             (terpri)))))
 
 (defun answer-ex-13-1 ()
-  (let ((list (read-file-as-lines "inputs/input13.txt")))
+  (let ((list (read-file-as-lines "../inputs/input13.txt")))
     (destructuring-bind (points folds) (split-points-folds list)
       (destructuring-bind (axis val) (car folds)
         (length (fold points axis val))))))
 
 (defun answer-ex-13-2 ()
-  (let ((list (read-file-as-lines "inputs/input13.txt")))
+  (let ((list (read-file-as-lines "../inputs/input13.txt")))
     (destructuring-bind (points folds) (split-points-folds list)
       (dolist (fold folds)
         (setf points (fold points (car fold) (cadr fold))))

@@ -46,12 +46,12 @@
       ((not (cdr filtered)) (parse-integer (car filtered) :radix 2))))
 
 (defun answer-ex-3-1 ()
-  (let ((list (read-file-as-lines "inputs/input3.txt")))
+  (let ((list (read-file-as-lines "../inputs/input3.txt")))
     (* (gamma list)
        (epsilon list))))
 
 (defun answer-ex-3-2 ()
-  (let ((list (read-file-as-lines "inputs/input3.txt")))
+  (let ((list (read-file-as-lines "../inputs/input3.txt")))
     (* (oxygen list)
        (co2 list))))
 

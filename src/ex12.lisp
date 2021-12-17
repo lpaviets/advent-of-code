@@ -70,13 +70,13 @@
               :sum (count-paths (cons j visited) j end nil start))))
 
 (defun answer-ex-12-1 ()
-  (init-graph "inputs/input12.txt")
+  (init-graph "../inputs/input12.txt")
   (let ((start-idx (cdr (assoc 'start *vertices*)))
         (end-idx (cdr (assoc 'end *vertices*))))
     (count-paths (list start-idx) start-idx end-idx)))
 
 (defun answer-ex-12-2 ()
-  (init-graph "inputs/input12.txt")
+  (init-graph "../inputs/input12.txt")
   (let ((start-idx (cdr (assoc 'start *vertices*)))
         (end-idx (cdr (assoc 'end *vertices*))))
     (count-paths (list start-idx) start-idx end-idx t start-idx)))

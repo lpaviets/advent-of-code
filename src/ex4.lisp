@@ -92,13 +92,13 @@
     (play-bingo-game)))
 
 (defun answer-ex-4-1 ()
-  (let ((list (read-file-as-lines "inputs/input4.txt")))
+  (let ((list (read-file-as-lines "../inputs/input4.txt")))
     (reset-boards)
     (parse-input list)
     (play-bingo-game)))
 
 (defun answer-ex-4-2 ()
-  (let ((list (read-file-as-lines "inputs/input4.txt")))
+  (let ((list (read-file-as-lines "../inputs/input4.txt")))
     (reset-boards)
     (parse-input list)
     (play-bingo-game-last)))

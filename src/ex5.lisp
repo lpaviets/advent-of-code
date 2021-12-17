@@ -48,11 +48,11 @@
           :collect (list start end)))
 
 (defun answer-ex-5-1 ()
-  (let ((list (read-file-as-lines "inputs/input5.txt"
+  (let ((list (read-file-as-lines "../inputs/input5.txt"
                                   :parse 'parse-coordinates)))
     (count-overlaps (keep-straight list))))
 
 (defun answer-ex-5-2 ()
-  (let ((list (read-file-as-lines "inputs/input5.txt"
+  (let ((list (read-file-as-lines "../inputs/input5.txt"
                                   :parse 'parse-coordinates)))
     (count-overlaps (keep-straight-and-diag list))))
