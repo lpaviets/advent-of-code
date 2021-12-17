@@ -9,7 +9,7 @@
     (list xmin xmax ymin ymax)))
 
 (defun sum-n (n)
-  (/ (* n (1+ n))
+  (truncate (* n (1+ n))
      2))
 
 ;;; Part 1, explanation (Disregard the horizontal velocity for now)
@@ -45,12 +45,11 @@
     (and (<= x1 (first pos) x2)
          (<= y1 (second pos) y2))))
 
-(defun pos-after-steps (velocity steps)
-  (destructuring-bind (x y) velocity
-    (list (- (sum-n x)
-             (sum-n (- x (min x steps))))
-          (- (sum-n y)
-             (sum-n (- y steps))))))
+(defun next-pos (pos step init-velocity)
+  (destructuring-bind (x y) pos
+    (destructuring-bind (vx vy) init-velocity
+      (list (+ x (max (- vx step) 0))
+            (+ y (- vy step))))))
 
 (defun over-target (pos target)
   (destructuring-bind (x1 x2 y1 y2) target
@@ -61,13 +60,13 @@
 (defun count-velocities (target)
   (destructuring-bind (x1 x2 y1 y2) target
     (declare (ignorable x1 y2))
-    (loop :for x :from 0 :to x2
+    (loop :for x :from (truncate (isqrt x1) 2) :to x2
           :sum
-          (loop :with max-y = (second (velocity-max-height target))
-                :for y :from y1 :to max-y
+          (loop :for y :from y1 :to (- y1)
                 :count
-                (loop :for steps :from 1
-                      :for pos = (pos-after-steps (list x y) steps)
+                (loop :for steps :from 0
+                      :for pos = (list x y)
+                        :then (next-pos pos steps (list x y))
                       :for goal = (in-target-area pos target)
                       :until (or goal (over-target pos target))
                       :finally (return goal))))))
