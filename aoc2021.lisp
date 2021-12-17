@@ -3,25 +3,26 @@
 (in-package #:aoc2021)
 
 ;;; Parsing
-
-(defun read-file-as-lines (filename &key (parse 'identity))
+;; Reading from files
+(defun read-file-as-lines (filename &key parse)
   "Read file into a list of lines."
   (with-open-file (in filename)
     (loop :for line = (read-line in nil nil)
           :while line
-          :collect (funcall parse line))))
+          :collect (if parse
+                       (funcall parse line)
+                       line))))
 
+(defun read-file-one-line (filename &key parse)
+  "Read the first line of FILENAME, applying PARSE to it if non-NIL"
+  (with-open-file (in filename)
+    (let ((line (read-line in nil nil)))
+      (if parse
+          (funcall parse line)
+          line))))
 
 (defun read-file-as-integers (filename)
   (read-file-as-lines filename :parse 'parse-integer))
-
-(defun split-word-int (line)
-  (ppcre:register-groups-bind (word (#'parse-integer int))
-      ("\(\\w+\) \(\\d+\)" line)
-    (cons word int)))
-
-(defun coma-separated-int-line (line)
-  (mapcar 'parse-integer (ppcre:split " *, *" line)))
 
 (defun read-array (list &optional (digits t))
   "Read a 2D-array. If DIGITS is non-nil, parses elements as digits"
@@ -37,6 +38,19 @@
                 :do
                    (setf (aref array i j) val))
         :finally (return array)))
+
+;; Other parsing utilities
+
+(defun split-word-int (line)
+  (ppcre:register-groups-bind (word (#'parse-integer int))
+      ("\(\\w+\) \(\\d+\)" line)
+    (cons word int)))
+
+(defun coma-separated-int-line (line)
+  (mapcar 'parse-integer (ppcre:split " *, *" line)))
+
+(defun parse-digit (char)
+  (- (char-int char) (char-int #\0)))
 
 ;;; Utilities
 

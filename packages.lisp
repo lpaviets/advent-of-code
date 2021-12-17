@@ -3,11 +3,14 @@
 (defpackage #:aoc2021
   (:use #:cl)
   (:export
+   ;; parsing
    #:read-file-as-lines
+   #:read-file-one-line
    #:read-file-as-integers
+   #:read-array
    #:coma-separated-int-line
    #:split-word-int
-   #:read-array
+   #:parse-digit
    #:neighbours
    #:flip
    #:permutations
