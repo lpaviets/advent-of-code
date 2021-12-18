@@ -50,7 +50,8 @@
   (mapcar 'parse-integer (ppcre:split " *, *" line)))
 
 (defun parse-digit (char)
-  (- (char-int char) (char-int #\0)))
+  (and (char<= #\0 char #\9)
+       (- (char-int char) (char-int #\0))))
 
 ;;; Utilities
 
