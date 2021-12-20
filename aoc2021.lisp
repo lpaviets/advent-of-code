@@ -66,6 +66,11 @@ Otherwise, elements that are not X nor Y are mapped to Y"
       (keep-others z)
       (t y))))
 
+(defun range (m &optional n (step 1))
+  (loop :for i = (if n m 0) :then (+ i step)
+        :until (= i (or n m))
+        :collect i))
+
 (defun permutations (n)
   "List of all the permutations of the integers between 0 and n included"
   (if (zerop n)
@@ -78,6 +83,17 @@ Otherwise, elements that are not X nor Y are mapped to Y"
                     :then (list (cons (car end) beg)
                                 (cdr end))
                   :collect (append beg (list n) end)))))
+
+(defun sublists-length (list n)
+  "List of all the sublists of LIST of length N"
+  (cond
+    ((= 1 n) (mapcar 'list list))
+    ((null list) nil)
+    (t
+     (append (sublists-length (cdr list) n)
+             (mapcar (lambda (x)
+                       (cons (car list) x))
+                     (sublists-length (cdr list) (1- n)))))))
 
 
 (defun valid-position (i j h w)

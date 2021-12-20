@@ -13,7 +13,9 @@
    #:parse-digit
    #:neighbours
    #:flip
+   #:range
    #:permutations
+   #:sublists-length
    #:extremum
    #:extremum-array
    #:do-array
