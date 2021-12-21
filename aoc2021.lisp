@@ -193,3 +193,10 @@ point and the ending point."
                  (progn
                    ,@body)))
          ,@body))))
+
+(defun print-array (array)
+  (loop :for i :below (array-dimension array 0) :do
+          (loop :for j :below (array-dimension array 1) :do
+            (format t "~a" (aref array i j)))
+          (format t "~%"))
+  array)

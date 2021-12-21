@@ -19,7 +19,8 @@
    #:extremum
    #:extremum-array
    #:do-array
-   #:do-line))
+   #:do-line
+   #:print-array))
 
 (in-package #:aoc2021)
 
