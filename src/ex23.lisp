@@ -10,6 +10,14 @@
                           "  #A#D#C#A#  "
                           "  #########  "))
 
+(defparameter *test-23-2* '("#############"
+                            "#...........#"
+                            "###B#C#B#D###"
+                            "  #D#C#B#A#  "
+                            "  #D#B#A#C#  "
+                            "  #A#D#C#A#  "
+                            "  #########  "))
+
 (defparameter *test-easy* '("#############"
                             "#...........#"
                             "###A#A#C#D###"
@@ -20,6 +28,9 @@
 
 (defparameter *cost* #(0 1 10 100 1000))
 (defparameter *solution* nil)
+
+(defparameter *unfold-lines* '("  #D#C#B#A#  "
+                               "  #D#B#A#C#  "))
 
 ;;; Solution 12521
 
@@ -37,18 +48,36 @@
             rooms))
     (cons hallway (nreverse rooms))))
 
-(defun make-solution-from-pos (rooms)
+(defun read-rooms-unfold (lines)
+  (let ((hallway (make-array (- (length (second lines)) 2)))
+        rooms)
+    (dolist (i *rooms-indices*)
+      (push (make-array 4 :initial-contents (list (char-to-amphi (char (fourth lines)
+                                                                       (1+ i)))
+                                                  (char-to-amphi (char (second *unfold-lines*)
+                                                                       (1+ i)))
+                                                  (char-to-amphi (char (first *unfold-lines*)
+                                                                       (1+ i)))
+                                                  (char-to-amphi (char (third lines)
+                                                                       (1+ i))))
+                          :fill-pointer 2)
+            rooms))
+    (cons hallway (nreverse rooms))))
+
+(defun make-solution-from-pos (rooms &optional (max-depth 2))
   (let ((hallway (car rooms)))
     (setf *solution*
           (list (make-array (array-dimensions hallway))
-                (make-array 2 :initial-element 1)
-                (make-array 2 :initial-element 2)
-                (make-array 2 :initial-element 3)
-                (make-array 2 :initial-element 4)))))
+                (make-array max-depth :initial-element 1)
+                (make-array max-depth :initial-element 2)
+                (make-array max-depth :initial-element 3)
+                (make-array max-depth :initial-element 4)))))
 
-(defun init-problem (lines)
-  (let ((rooms (read-rooms lines)))
-    (make-solution-from-pos rooms)
+(defun init-problem (lines &optional (max-depth 2))
+  (let ((rooms (if (= 2 max-depth)
+                   (read-rooms lines)
+                   (read-rooms-unfold lines))))
+    (make-solution-from-pos rooms max-depth)
     rooms))
 
 (defun free-hallway-p (start end hallway &optional include-start)
@@ -57,14 +86,14 @@
         :always (zerop (aref hallway place))
         :until (= place end)))
 
-(defun free-room-p (room num)
-  (case (length room)
-    (0 2)
-    (1 (and (= (aref room 0) num)
-            1))
-    (t nil)))
+(defun free-room-p (room num &optional (max-depth 2))
+  (let ((len (length room)))
+    (when (< len max-depth)
+      (loop :for i :below len
+            :always (= (aref room i) num)
+            :finally (return (- max-depth len))))))
 
-(defun leave-room-k (rooms k)
+(defun leave-room-k (rooms k &optional (max-depth 2))
   (let* ((hallway (car rooms))
          (idx (nth (1- k) *rooms-indices*))
          (copy-rooms (deepcopy rooms))
@@ -74,7 +103,7 @@
                      :thereis (/= elt k)))
       (let* ((element (vector-pop room))
              (len (length hallway))
-             (depth (if (plusp (length room)) 1 2))
+             (depth (- max-depth (length room)))
              (cost (aref *cost* element)))
         (append
          ;; Moves to the right while it is possible
@@ -94,11 +123,11 @@
                           (setf (aref (car new) i) element)
                           (cons new (* moves cost)))))))))
 
-(defun transfer-room (rooms)
+(defun transfer-room (rooms &optional (max-depth 2))
   (let ((hallway (car rooms)))
     (loop :for i :from 1 :to 4
-          :for room-idx = (nth (1- i) *rooms-indices*)
           :for room = (nth i rooms)
+          :for room-idx = (nth (1- i) *rooms-indices*)
           :for top = (when (plusp (length room))
                        (aref room (1- (length room))))
           :for dir = (and top (signum (- top room-idx)))
@@ -107,8 +136,8 @@
                      (/= top i)
                      (free-hallway-p room-idx goal-idx hallway t))
             :do
-               (let ((depth-goal-idx (free-room-p (nth top rooms) top))
-                     (depth-top (if (= 1 (length room)) 2 1)))
+               (let ((depth-goal-idx (free-room-p (nth top rooms) top max-depth))
+                     (depth-top (1+ (- max-depth (length room)))))
                  (when depth-goal-idx
                    (let ((new (deepcopy rooms))
                          (dist (+ depth-goal-idx
@@ -119,14 +148,14 @@
                      (vector-push top (nth top new))
                      (return (list (cons new (* dist unit-cost))))))))))
 
-(defun %goto-room-element (rooms elt-idx)
+(defun %goto-room-element (rooms elt-idx &optional (max-depth 2))
   (let* ((hallway (car rooms))
          (element (aref hallway elt-idx))
          (room-idx (nth (1- element) *rooms-indices*))
          (room (nth element rooms))
-         (room-free (free-room-p room element))
+         (room-free (free-room-p room element max-depth))
          (cost (aref *cost* element))
-         (depth (if (plusp (length room)) 1 2)))
+         (depth (- max-depth (length room))))
     (when (and room-free
                (free-hallway-p elt-idx room-idx hallway))
       (let ((new (deepcopy rooms)))
@@ -135,64 +164,62 @@
         (list (cons new (+ (* (abs (- room-idx elt-idx)) cost)
                            (* depth cost))))))))
 
-(defun goto-room (rooms)
+(defun goto-room (rooms &optional (max-depth 2))
   (loop :with hallway = (car rooms)
         :for elt :across hallway
         :for i :from 0
         :unless (zerop elt)
-          :append (%goto-room-element rooms i)))
+          :append (%goto-room-element rooms i max-depth)))
 
-(defun gen-moves (rooms)
-  (or (goto-room rooms)
-      (transfer-room rooms)
+(defun gen-moves (rooms &optional (max-depth 2))
+  (or (goto-room rooms max-depth)
+      (transfer-room rooms max-depth)
       (append (loop :for k :from 1 :to 4
-                    :append (leave-room-k rooms k)))))
+                    :append (leave-room-k rooms k max-depth)))))
 
-(defun energy-from (rooms &optional show-path)
-  (multiple-value-bind (energy parents) (shortest-path #'gen-moves
-                                                       rooms
-                                                       *solution*
-                                                       :test 'equalp)
-    (when show-path
-      (loop :for v = *solution* :then (gethash v parents)
-            :collect v :into pos
-            :until (equalp v rooms)
-            :finally
-               (loop :initially (terpri)
-                     :for p = rooms :then q
-                     :for q :in (cdr (reverse pos))
-                     :when q :do
-                       (find-cost p q)
-                       (print-rooms q))))
-    energy))
+(defun energy-from (rooms &optional (max-depth 2) show-path)
+  (flet ((gen-moves-depth (rooms)
+           (gen-moves rooms max-depth)))
+    (multiple-value-bind (energy parents) (shortest-path #'gen-moves-depth
+                                                         rooms
+                                                         *solution*
+                                                         :test 'equalp)
+      (when show-path
+        (loop :for v = *solution* :then (gethash v parents)
+              :collect v :into pos
+              :until (equalp v rooms)
+              :finally
+                 (loop :initially (terpri)
+                       :for p = rooms :then q
+                       :for q :in (cdr (reverse pos))
+                       :when q :do
+                         (find-cost p q)
+                         (print-rooms q))))
+      energy)))
 
-(defun find-cost (before after)
-  (loop :for (pos . cost) :in (gen-moves before)
+(defun find-cost (before after &optional (max-depth 2))
+  (loop :for (pos . cost) :in (gen-moves before max-depth)
         :until (equalp pos after)
         :finally (format t "Cost: ~a~%" cost)))
 
-(defun print-rooms (rooms)
+(defun print-rooms (rooms &optional (max-depth 2))
   (destructuring-bind (hallway r1 r2 r3 r4) rooms
     (format t "Rooms:~%")
     (loop :for c :across hallway :do
       (format t "~:[ ~;~a~]" (plusp c) c))
-    (format t "~%  ~{~a ~}~%"
-            (mapcar (lambda (arr)
-                      (case (length arr)
-                        (0 " ")
-                        (1 " ")
-                        (2 (aref arr 1))))
-                    (list r1 r2 r3 r4)))
-    (format t "  ~{~a ~}~%~%"
-            (mapcar (lambda (arr)
-                      (case (length arr)
-                        (0 " ")
-                        ((1 2) (aref arr 0))))
-                    (list r1 r2 r3 r4)))))
+    (loop :for i :from (1- max-depth) :downto 0 :do
+      (format t "~%  ~{~a ~}~%"
+              (mapcar (lambda (arr)
+                        (let ((len (length arr)))
+                          (if (< (1- len) i)
+                              " "
+                              (aref arr i))))
+                      (list r1 r2 r3 r4))))
+    (terpri)))
 
 (defun answer-ex-23-1 ()
   (let* ((lines (read-file-as-lines "../inputs/input23.txt"))
          (rooms (init-problem lines)))
-    (energy-from rooms)))
+    (energy-from rooms 2)))
 
 (defun answer-ex-23-2 ())
