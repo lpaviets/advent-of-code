@@ -19,6 +19,7 @@
    #:extremum
    #:extremum-array
    #:deepcopy
+   #:shuffle
    #:shortest-path
    #:dfs
    #:do-array

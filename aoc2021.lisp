@@ -180,6 +180,21 @@ and one optional one (the position, given as a list of length 2)"
              thing)
     table))
 
+(defun %shuffle (list len acc)
+  (declare (type list list acc)
+           (type fixnum len)
+           (optimize (speed 3)))
+  (if (endp list)
+      acc
+      (let* ((rand (random (+ len 1)))
+             (new-acc (append (butlast acc rand)
+                              (list (car list))
+                              (last acc rand))))
+        (%shuffle (cdr list) (+ len 1) new-acc))))
+
+(defun shuffle (list)
+  (%shuffle list 0 nil))
+
 ;;; Algorithms
 
 ;;; Dijkstra
@@ -248,19 +263,22 @@ SOURCE and TARGET are INTEGER, corresponding to valid indices of the array"
 
 ;; DFS
 
-(defun %dfs (edges pending &key at-vertex (test 'eql) target)
+(defun %dfs (edges pending &key at-vertex (test 'eql) target random)
   (let ((visited (make-hash-table :test test)))
     (loop :while pending
           :for (x parent cost) = (pop pending)
           :unless (gethash x visited) :do
-            (loop :for (edge . cost) :in (funcall edges x) :do
-              (push (list edge x cost) pending))
+            (loop :for (edge . cost) :in (if random
+                                             (shuffle (funcall edges x))
+                                             (funcall edges x))
+                  :do
+                     (push (list edge x cost) pending))
             (setf (gethash x visited) t)
             (when at-vertex
               (funcall at-vertex x parent cost))
           :until (and target (funcall test x target)))))
 
-(defun dfs (edges source &key at-vertex (test 'eql) target)
+(defun dfs (edges source &key at-vertex (test 'eql) target random)
   "Depth-First-Search of the graph determined by EDGES.
 EDGES is a function of one argument, a vertex, and return a list of cons cells
 (NEIGHBOUR . EDGE-WEIGHT)
@@ -269,11 +287,13 @@ AT-VERTEX is a function of three argument, the vertex being visited, its parent,
  and the cost of the edge used to reach it.
 TEST is how vertices are compared
 If TARGET is non-NIL, the DFS stops after reaching a vertex equal (as of TEST)
-to it."
+to it.
+RANDOM determines whether the edges are searched in a deterministic way or not"
   (%dfs edges (list (list source))
         :at-vertex at-vertex
         :test test
-        :target target))
+        :target target
+        :random random))
 
 ;;; Useful macros
 
