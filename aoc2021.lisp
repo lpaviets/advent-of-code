@@ -153,6 +153,128 @@ and one optional one (the position, given as a list of length 2)"
                  val-min val-x))))
     pos))
 
+(defgeneric deepcopy (thing)
+  (:documentation "Recursively creates a copy of THING.")
+  (:method ((thing t)) thing))
+
+(defmethod deepcopy ((thing list))
+  (mapcar #'deepcopy thing))
+
+(defmethod deepcopy ((thing array))
+  (loop :with new = (make-array (array-dimensions thing)
+                                :element-type (array-element-type thing)
+                                :adjustable (adjustable-array-p thing)
+                                :fill-pointer (and (array-has-fill-pointer-p thing)
+                                                   (fill-pointer thing)))
+        :for i :below (array-total-size thing) :do
+          (setf (row-major-aref new i)
+                (deepcopy (row-major-aref thing i)))
+        :finally (return new)))
+
+(defmethod deepcopy ((thing hash-table))
+  (let ((table (make-hash-table :size (hash-table-size thing)
+                                :test (hash-table-test thing))))
+    (maphash (lambda (k v)
+               (setf (gethash (deepcopy k) table)
+                     (deepcopy v)))
+             thing)
+    table))
+
+;;; Algorithms
+
+;;; Dijkstra
+;;; Algo:
+;;; Initialization:
+;;; 1. Q <- empty
+;;; 2. for each v in V(G): dist[v] <- +inf
+;;; 3. Q.insert(source, 0)
+;;;
+;;; Algo:
+;;; while Q is not empty do:
+;;;   (u, k) <- delete_min(Q)
+;;;   if k == dist[u]:
+;;;     for each (u, v) in E(G) do:
+;;;       if dist[u] + weight(u, v) < dist[v]:
+;;;         Q.insert(v, dist[u] + weight(u, v))
+;;;         dist[v] <- dist[u] + weight(u, v)
+
+(defgeneric shortest-path (edges source target &key test)
+  (:documentation "Shortest path from SOURCE to TARGET in the graph G determined
+by EDGES.
+Comparison between vertices is done using TEST"))
+
+(defmethod shortest-path (edges source target &key (test 'eql))
+  "EDGES is expected to be a function of one element, a vertex (of the
+same type as SOURCE and TARGET), and return a list of cons cells,
+whose car is an adjacent vertex and whose cdr is the edge's weight.
+For example:
+(funcall EDGES SOURCE) -> ((u1 . w1) (u2 . w2)) ... (un . wn))
+where the ui's are exactly the vertices adjacent to SOURCE."
+  (let  ((distance (make-hash-table :test test))
+         (queue (heap:make-heap #'< :key #'cdr))
+         (parent (make-hash-table :test test)))
+    (loop
+      :initially
+         (setf (gethash source distance) 0)
+         (heap:heap-push (cons source 0) queue)
+      :while (heap:heap-peek queue)
+      :for best = (heap:heap-pop queue)
+      :for (vertex . queue-dist) = best
+      :for curr-dist = (or (gethash vertex distance)
+                           most-positive-fixnum)
+      :when (= queue-dist curr-dist)
+        :do (loop :for edge :in (funcall edges vertex)
+                  :for (other . weight) = edge
+                  :for other-new-dist = (+ queue-dist weight)
+                  :when (< other-new-dist (or (gethash other distance)
+                                              most-positive-fixnum))
+                    :do
+                       (setf (gethash other distance) other-new-dist)
+                       (heap:heap-push (cons other other-new-dist) queue)
+                       (setf (gethash other parent) vertex))
+      :until (funcall test vertex target)
+      :finally (return (values (gethash target distance)
+                               parent)))))
+
+(defmethod shortest-path ((edges array) (source integer) (target integer) &key (test 'eql))
+  "EDGES is given as a 2D array, representing the adjacency matrix of the graph
+(aref EDGES i j) is the weight of the oriented edge between I and J
+SOURCE and TARGET are INTEGER, corresponding to valid indices of the array"
+  (flet ((fun-edges (vertex)
+           (loop :for j :below (array-dimension edges 1)
+                 :for weight = (aref edges vertex j)
+                 :collect (cons j weight))))
+    (shortest-path #'fun-edges source target :test test)))
+
+;; DFS
+
+(defun %dfs (edges pending &key at-vertex (test 'eql) target)
+  (let ((visited (make-hash-table :test test)))
+    (loop :while pending
+          :for (x parent cost) = (pop pending)
+          :unless (gethash x visited) :do
+            (loop :for (edge . cost) :in (funcall edges x) :do
+              (push (list edge x cost) pending))
+            (setf (gethash x visited) t)
+            (when at-vertex
+              (funcall at-vertex x parent cost))
+          :until (and target (funcall test x target)))))
+
+(defun dfs (edges source &key at-vertex (test 'eql) target)
+  "Depth-First-Search of the graph determined by EDGES.
+EDGES is a function of one argument, a vertex, and return a list of cons cells
+(NEIGHBOUR . EDGE-WEIGHT)
+SOURCE is the initial vertex from which to perform the DFS
+AT-VERTEX is a function of three argument, the vertex being visited, its parent,
+ and the cost of the edge used to reach it.
+TEST is how vertices are compared
+If TARGET is non-NIL, the DFS stops after reaching a vertex equal (as of TEST)
+to it."
+  (%dfs edges (list (list source))
+        :at-vertex at-vertex
+        :test test
+        :target target))
+
 ;;; Useful macros
 
 (defmacro do-array ((i j x array &optional return) &body body)
@@ -196,7 +318,13 @@ point and the ending point."
 
 (defun print-array (array)
   (loop :for i :below (array-dimension array 0) :do
-          (loop :for j :below (array-dimension array 1) :do
-            (format t "~a" (aref array i j)))
-          (format t "~%"))
+    (loop :for j :below (array-dimension array 1) :do
+      (format t "~a" (aref array i j)))
+    (format t "~%"))
   array)
+
+(defun print-hash (object &optional (stream t))
+  (format stream "#HASH{~{~{(~s : ~s)~}~%~^ ~}}"
+          (loop :for key :being :the :hash-keys :of object
+                  :using (:hash-value value)
+                :collect (list key value))))

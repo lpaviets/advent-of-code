@@ -10,7 +10,7 @@
         (parent (make-array (array-dimensions array))))
 
     (let ((heap (heap:make-heap '< :key 'third))) ; x y distance
-      (setf (aref distance 0 0) 0)        ; Initialize
+      (setf (aref distance 0 0) 0)                ; Initialize
       (heap:heap-push (list 0 0 0) heap)
 
       (loop :while (heap:heap-peek heap)
@@ -33,6 +33,15 @@
           :until (equal (list x y) '(0 0))
           :sum (aref array x y))))
 
+;;; Using the generic Dijkstra algo
+(defun fill-lowest-risk (array)
+  (declare (optimize (debug 3) (speed 0)))
+  (flet ((edges (vertex)
+           (loop :with (i j) = vertex
+                 :for u :in (neighbours i j array)
+                 :collect (cons u (apply #' aref array u)))))
+    (shortest-path #'edges (list 0 0) (mapcar '1- (array-dimensions array)) :test 'equal)))
+
 
 (defun build-big-array (array)
   (let* ((height (array-dimension array 0))
@@ -52,10 +61,10 @@
 (defun answer-ex-15-1 ()
   (let* ((list (read-file-as-lines "../inputs/input15.txt"))
          (array (read-array list)))
-    (fill-lowest-risk-heap array)))
+    (fill-lowest-risk-heap array))) ;; 361
 
 (defun answer-ex-15-2 ()
   (let* ((list (read-file-as-lines "../inputs/input15.txt"))
          (array (read-array list))
          (big-array (build-big-array array)))
-    (fill-lowest-risk-heap big-array)))
+    (fill-lowest-risk-heap big-array))) ;; 2838

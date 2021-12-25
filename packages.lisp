@@ -18,6 +18,9 @@
    #:sublists-length
    #:extremum
    #:extremum-array
+   #:deepcopy
+   #:shortest-path
+   #:dfs
    #:do-array
    #:do-line
    #:print-array))
