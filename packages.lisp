@@ -21,6 +21,7 @@
    #:deepcopy
    #:shuffle
    #:shortest-path
+   #:shortest-path-dec-key
    #:dfs
    #:do-array
    #:do-line

@@ -261,6 +261,44 @@ SOURCE and TARGET are INTEGER, corresponding to valid indices of the array"
                  :collect (cons j weight))))
     (shortest-path #'fun-edges source target :test test)))
 
+
+;; ;; Other implementation: uses a heap with a 'decrease-key' operation
+;; ;; Way better space-wise, not necessarily the case speed-wise
+(defmethod shortest-path-dec-key (edges source target &key (test 'eql))
+  "EDGES is expected to be a function of one element, a vertex (of the
+same type as SOURCE and TARGET), and return a list of cons cells,
+whose car is an adjacent vertex and whose cdr is the edge's weight.
+For example:
+(funcall EDGES SOURCE) -> ((u1 . w1) (u2 . w2)) ... (un . wn))
+where the ui's are exactly the vertices adjacent to SOURCE."
+  (let  ((distance (make-hash-table :test test))
+         (parent (make-hash-table :test test)))
+    (declare (special distance))
+    (flet ((get-dist (x)
+             (or (gethash x distance)
+                 most-positive-fixnum)))
+      (loop
+        :with queue = (heap+:make-heap #'< :key #'get-dist)
+        :initially
+           (setf (gethash source distance) 0)
+           (heap+:heap-push source queue)
+        :while (heap+:heap-peek queue)
+        :for vertex = (heap+:heap-pop queue)
+        :for curr-dist = (get-dist vertex)
+
+        :do (loop :for edge :in (funcall edges vertex)
+                  :for (other . weight) = edge
+                  :for other-new-dist = (+ curr-dist weight)
+                  :when (< other-new-dist (get-dist other))
+                    :do
+                       (setf (gethash other distance) other-new-dist)
+                       (heap+:heap-push other queue)
+                       (setf (gethash other parent) vertex))
+        :until (funcall test vertex target)
+        :finally (hash-table-count distance)
+           (return (values (gethash target distance)
+                           parent))))))
+
 ;; DFS
 
 (defun %dfs (edges pending &key at-vertex (test 'eql) target random)
