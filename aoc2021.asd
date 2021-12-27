@@ -1,4 +1,4 @@
-;;;; 2021.asd
+;;;; aoc2021.asd
 
 (asdf:defsystem #:aoc2021
   :description "Solutions for the 2021 Advent of Code"
@@ -6,10 +6,8 @@
   :license  "Specify license here"
   :version "0.0.1"
   :serial t
-  :depends-on (#:cl-ppcre #:heap)
-  :components ((:file "heap+")
-               (:file "packages")
-               (:file "aoc2021")
+  :depends-on (#:advent-of-code)
+  :components ((:file "packages")
                (:module src
                 :pathname "src"
                 :components ((:file "ex1")
