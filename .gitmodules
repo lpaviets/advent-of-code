@@ -1,0 +1,3 @@
+[submodule "aoc2021"]
+	path = aoc2021
+	url = https://github.com/lpaviets/aoc2021

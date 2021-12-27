@@ -1,0 +1,20 @@
+* Advent of Code
+[[https://adventofcode.com/][Advent of Code]] is a programming challenge taking place every year from December 1st to December 25th. Each day, a new problem is given to the players, in the form of a short 'situation' (involving elves, submarines & other cool stories). Players are then asked to answer a question about their own input (/i.e./ their problem instance). Upon giving the correct answer, they are asked a second question about the same input, usually more difficult. This incitates players to solve the first part in a generic and efficient way, as they are unaware of the second part.
+* Repository
+This repository mainly contains my own utilities to solve the various AoC year after year. For the solution of a given year, see the sub-modules of this repository.
+
+** Parsing
+As states above, players are given a new input each day, as an instance of the daily problem.
+Therefore, some time has to be spent on parsing this input file, and producing a decent representation of the data. Several functions are provided to do so, /e.g./ to read the file as a list of lines, as an array, and so on.
+
+** Utilities
+Some problems are quite similar and require (or at least, are made easier with) common utilities that might or might not be present in the language. This repo contains a few of those, /e.g./ a way to generate permutations, to generate the neighbours of a given cell in an array, to recursively copy any object ...
+
+** Algorithms
+Many useful algorithms are often required, especially related to graphs. For example, I also use my own implementation of Dijkstra's algorithm, and a patched version of priority queues.
+
+** Macros
+Several macros are also frequently useful: for example, a way to iterate over a segment' specified by its two endpoint (in any order, in any - vertical, horizontal, diagonal - direction), or over a 2D-array.
+
+** Printing
+Common Lisp provides many useful ways to print objects, but we sometimes want a very specific thing, and so I also use custom functions producing the 'right' formatting most of the time.
