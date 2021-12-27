@@ -46,7 +46,7 @@
     (let ((list (loop :for i :from 1 :to 25
                       :collect
                       `(defpackage ,(symb meta-package "/EX" i)
-                         (:use :cl ,meta-package)
+                         (:use :cl ,meta-package :advent-of-code)
                          (:export
                           ,(symb :answer-ex- i :-1)
                           ,(symb :answer-ex- i :-2))))))
