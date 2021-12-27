@@ -112,8 +112,6 @@
 (defmethod add-cube ((cube-a cube) (cube-b cube))
   (let ((int-cube (cube-intersection cube-a cube-b)))
     (when int-cube
-      (assert (and (contained cube-a int-cube)
-                   (contained cube-b int-cube)))
       (remove-cube cube-a int-cube))))
 
 (defmethod remove-cube ((cube-a cube) (cube-b cube))
