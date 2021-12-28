@@ -1,5 +1,6 @@
 (defpackage #:advent-of-code
   (:use #:cl)
+  (:nicknames #:aoc)
   (:export
    ;; Generate sub-packages
    #:gen-packages
@@ -7,6 +8,7 @@
    #:read-file-as-lines
    #:read-file-one-line
    #:read-file-as-integers
+   #:read-file-as-sexprs
    #:read-array
    ;; Small parsing utils
    #:coma-separated-int-line
