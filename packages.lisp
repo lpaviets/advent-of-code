@@ -27,6 +27,7 @@
    ;; Algorithms
    #:shortest-path
    #:shortest-path-dec-key
+   #:a-star
    #:dfs
    ;; Macros
    #:do-array

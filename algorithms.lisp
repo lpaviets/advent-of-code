@@ -68,8 +68,8 @@ SOURCE and TARGET are INTEGER, corresponding to valid indices of the array"
     (shortest-path #'fun-edges source target :test test)))
 
 
-;; ;; Other implementation: uses a heap with a 'decrease-key' operation
-;; ;; Way better space-wise, not necessarily the case speed-wise
+;;; Other implementation: uses a heap with a 'decrease-key' operation
+;;; Way better space-wise, not necessarily the case speed-wise
 (defmethod shortest-path-dec-key (edges source target &key (test 'eql))
   "EDGES is expected to be a function of one element, a vertex (of the
 same type as SOURCE and TARGET), and return a list of cons cells,
@@ -104,6 +104,46 @@ where the ui's are exactly the vertices adjacent to SOURCE."
         :finally (hash-table-count distance)
            (return (values (gethash target distance)
                            parent))))))
+
+;;; Based on the version with a "decrease-key" priority queue.
+;;; Somewhat necessary, as one problem of A* is its memory consumption,
+;;; so I use the Dijkstra "baseline" which uses less space.
+;;; UNTESTED YET, NOT SURE THAT IT REALLY WORKS !
+(defun a-star (edges source target heuristic &key (test 'eql))
+  "HEURISTIC is a function of one argument, a vertex, returning a value, ideally
+close to the distance from the vertex to TARGET.
+To ensure optimality of the path, it is required that HEURISTIC never
+overestimates the real distance.
+See `shortest-path-dec-key' for the other arguments."
+  (let  ((distance (make-hash-table :test test))
+         (parent (make-hash-table :test test)))
+    (declare (special distance))
+    (flet ((get-dist (x)
+             (let ((dist (gethash x distance)))
+               (if dist
+                   (+ dist (funcall heuristic x))
+                   most-positive-fixnum))))
+      (loop
+        :with queue = (heap+:make-heap #'< :key #'get-dist)
+        :initially
+           (setf (gethash source distance) 0)
+           (heap+:heap-push source queue)
+        :while (heap+:heap-peek queue)
+        :for vertex = (heap+:heap-pop queue)
+        :for curr-dist = (get-dist vertex)
+
+        :do (loop :for edge :in (funcall edges vertex)
+                  :for (other . weight) = edge
+                  :for other-new-dist = (+ curr-dist weight)
+                  :when (< other-new-dist (get-dist other))
+                    :do
+                       (setf (gethash other distance) other-new-dist)
+                       (heap+:heap-push other queue)
+                       (setf (gethash other parent) vertex))
+        :until (funcall test vertex target)
+        :finally (hash-table-count distance)
+                 (return (values (gethash target distance)
+                                 parent))))))
 
 ;; DFS
 
