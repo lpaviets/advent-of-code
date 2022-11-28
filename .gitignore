@@ -1,4 +1,4 @@
 *~
-/inputs/
 *.py
 *.fasl
+/aoc*/inputs/
