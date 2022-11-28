@@ -3,4 +3,6 @@ This repository contains (some) solutions to the AoC 2021 problems.
 
 Everything is done using Common Lisp.
 
-Dependencies are kept as low as possible, using only [[https://edicl.github.io/cl-ppcre/][cl-ppcre]] to deal with the input parsing, and [[https://common-lisp.net/project/alexandria/][Alexandria]] if it is really unavoidable.
+Dependencies are kept as low as possible, using only:
+- [[https://edicl.github.io/cl-ppcre/][cl-ppcre]] to deal with the input parsing.
+- a heap package, used to have a priority queue (Dijkstra algorithm ...), modified to include an efficient ~heap-update~ operation (sometimes referred to as ~decrease-key~ in the literatture). The base package is available on Quicklisp, the modified version is in the ~heap+.lisp~ of this repository !

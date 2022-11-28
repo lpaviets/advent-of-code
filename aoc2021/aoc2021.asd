@@ -1,14 +1,13 @@
-;;;; 2021.asd
+;;;; aoc2021.asd
 
 (asdf:defsystem #:aoc2021
-  :description "Describe aoc2021 here"
-  :author "Your Name <your.name@example.com>"
+  :description "Solutions for the 2021 Advent of Code"
+  :author "Léo Paviet Salomon"
   :license  "Specify license here"
   :version "0.0.1"
   :serial t
-  :depends-on (#:cl-ppcre #:heap)
+  :depends-on (#:advent-of-code)
   :components ((:file "packages")
-               (:file "aoc2021")
                (:module src
                 :pathname "src"
                 :components ((:file "ex1")
