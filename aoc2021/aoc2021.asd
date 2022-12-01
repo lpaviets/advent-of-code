@@ -6,7 +6,7 @@
   :license  "Specify license here"
   :version "0.0.1"
   :serial t
-  :depends-on (#:advent-of-code)
+  :depends-on (#:numbra)
   :components ((:file "packages")
                (:module src
                 :pathname "src"
