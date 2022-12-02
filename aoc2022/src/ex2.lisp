@@ -2,13 +2,15 @@
 
 ;;; Simplify: work MOD 3
 (defun sym-to-action (sym)
-  (case sym
+  (ecase sym
     ((a x) 0)
     ((b y) 1)
     ((c z) 2)))
 
-(defun game-to-actions (game)
-  (mapcar 'sym-to-action game))
+;;; PAIR is a list of symbols, as read from the file
+;;; GAME is a list of actions (here, integers mod 3)
+(defun pair-to-game (pair)
+  (mapcar 'sym-to-action pair))
 
 (defun action-score (action)
   (1+ action))
@@ -22,25 +24,24 @@
   (+ (outcome-score game) (action-score (second game))))
 
 (defun score-from-pair (pair)
-  (score-from-game (game-to-actions pair)))
+  (score-from-game (pair-to-game pair)))
 
 (defun find-action (other me)
-  (mod (case me
+  (mod (ecase me
          (x (1- other))
          (y other)
-         (z (1+ other))
-         (otherwise (error "Invalid actions :~S, ~S" other me)))
+         (z (1+ other)))
        3))
 
-(defun game-outcome-to-actions (game)
+(defun pair-to-game/outcome (pair)
   (destructuring-bind (other me)
-      game
+      pair
     (let* ((other (sym-to-action other))
            (me (find-action other me)))
       (list other me))))
 
-(defun score-from-game-outcome (game)
-  (score-from-game (game-outcome-to-actions game)))
+(defun score-from-pair/outcome (pair)
+  (score-from-game (pair-to-game/outcome pair)))
 
 (defun answer-ex-2-1 ()
   (let ((games (read-file-as-sexprs "../inputs/input2")))
@@ -48,4 +49,4 @@
 
 (defun answer-ex-2-2 ()
   (let ((games (read-file-as-sexprs "../inputs/input2")))
-    (reduce #'+ games :key #'score-from-game-outcome)))
+    (reduce #'+ games :key #'score-from-pair/outcome)))
