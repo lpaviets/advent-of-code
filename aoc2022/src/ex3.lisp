@@ -27,6 +27,10 @@
           (add-item-to-compartment x intersection)))
     intersection))
 
+;;; WARNING: this is NOT portable, there is NO REASON for a character
+;;; to a have a char-code corresponding to what is required by AoC
+;;; In particular, we might have A < a < b < B < C ... with some
+;;; interleaving between uppercase & lowercase characters
 (defun item-priority (item)
   (cond
     ((lower-case-p item)
@@ -68,3 +72,31 @@
   (let* ((bags (read-file-as-lines "../inputs/input3"))
          (groups (bags-split-in-group bags)))
     (reduce #'+ groups :key #'group-priority)))
+
+
+;;;; Other solution with lists and standard INTERSECTION function
+(defun %str-to-bag (str)
+  (coerce str 'list))
+
+(defun %str-to-cpts (str)
+  (let ((size (/ (length str) 2)))
+    (list (%str-to-bag (subseq str 0 size))
+          (%str-to-bag (subseq str size)))))
+
+(defun %item-priority (item)
+  (1+ (position item "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" :test #'char=)))
+
+(defun %cpts-prio (cpts)
+  (%item-priority (car (reduce #'intersection cpts))))
+
+(defun %split-in-groups (bags)
+  (loop :for (a b c) :on bags :by #'cdddr
+        :collect (mapcar '%str-to-bag (list a b c))))
+
+(defun %answer-ex-3-1 ()
+  (let ((bags (read-file-as-lines "../inputs/input3" :parse '%str-to-cpts)))
+    (reduce #'+ bags :key #'%cpts-prio)))
+
+(defun %answer-ex-3-2 ()
+  (let ((bags (read-file-as-lines "../inputs/input3")))
+    (reduce #'+ (%split-in-groups bags) :key #'%cpts-prio)))
