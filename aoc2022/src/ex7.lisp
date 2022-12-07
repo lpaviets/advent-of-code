@@ -12,6 +12,7 @@
    (files :initform (make-hash-table :test 'equal) :accessor files)
    (size :initform nil)))
 
+;;;; Globals
 (defparameter *root-dir* (make-instance 'aoc-dir
                                         :name "/"
                                         :parent nil))
@@ -23,6 +24,7 @@
                                         :parent nil))
   (setf *current-dir* *root-dir*))
 
+;;;; File system utilities
 (defun found-file (name)
   (gethash name (files *current-dir*)))
 
@@ -46,31 +48,25 @@
                                   :parent *current-dir*)))
           (add-file name dir)))))
 
-(defun parse-ls-line (line)
-  (if (string= (subseq line 0 3) "dir")
-      (cons 'dir (subseq line 4))
-      (let ((pos (position #\Space line)))
-        (cons (parse-integer line :end pos)
-              (subseq line (1+ pos))))))
+(defmethod size ((dir aoc-dir))
+  (or (slot-value dir 'size)
+      (let ((total 0))
+        (do-hashvalues (subfile (files dir))
+          (incf total (size subfile)))
+        (setf (slot-value dir 'size) total))))
 
-(defun split-on-command (lines)
-  (loop :for block = (loop :for (line next . rest) :on lines
-                           :while line
-                           :for commandp = (char= (char line 0) #\$)
-                           :when (and commandp (string= "cd" (subseq line 2 4)))
-                             :collect 'cd :into command
-                             :and :collect (string-trim " " (subseq line 4)) :into command
-                           :when (and commandp (string= "ls" (subseq line 2 4)))
-                             :collect 'ls :into command
-                           :when (not commandp)
-                             :collect (parse-ls-line line) :into command
-                           :until (or (not next)
-                                      (char= (char next 0) #\$))
-                           :finally (setf lines (cons next rest))
-                                    (return command))
-        :while block
-        :collect block))
+(defun map-file-system (fun-dir &optional fun-file)
+  (labels ((aux (file)
+             (etypecase file
+               (aoc-dir
+                (do-hashvalues (subfile (files file))
+                  (aux subfile))
+                (when fun-dir (funcall fun-dir file)))
+               (aoc-file
+                (when fun-file (funcall fun-file file))))))
+    (aux *root-dir*)))
 
+;;;; Commands
 (defun run-cd (dir)
   (setf *current-dir* (cond
                         ((equal dir "/") *root-dir*)
@@ -89,6 +85,32 @@
     (cd (run-cd (second command)))
     (ls (run-ls (cdr command)))))
 
+;;;; Parsing
+(defun parse-ls-line (line)
+  (if (string= (subseq line 0 3) "dir")
+      (cons 'dir (subseq line 4))
+      (let ((pos (position #\Space line)))
+        (cons (parse-integer line :end pos)
+              (subseq line (1+ pos))))))
+
+(defun split-on-command (lines)
+  (loop :for block = (loop :with command
+                           :for (line . rest) :on lines
+                           :for next = (car rest)
+                           :do (cond
+                                 ((string= "$ cd" (subseq line 0 4))
+                                  (push 'cd command)
+                                  (push (subseq line 5) command))
+                                 ((string= "$ ls" line)
+                                  (push 'ls command))
+                                 (t
+                                  (push (parse-ls-line line) command)))
+                           :until (or (not next) (char= (char next 0) #\$))
+                           :finally (setf lines rest)
+                                    (return (nreverse command)))
+        :while block
+        :collect block))
+
 (defun parse-input (file)
   (let* ((lines (read-file-as-lines file))
          (commands (split-on-command lines)))
@@ -96,57 +118,31 @@
       (run-command cmd))))
 
 ;;; Questions:
-(defmethod size ((dir aoc-dir))
-  (let ((size (slot-value dir 'size)))
-    (or size
-        (let ((total 0))
-          (do-hashvalues (subfile (files dir))
-            (incf total (size subfile)))
-          (setf (slot-value dir 'size) total)))))
-
 (defun all-sizes-below (threshold)
   (let ((acc 0))
-    (labels ((aux (file)
-               (when (eq (class-of file) (find-class 'aoc-dir))
-                 (do-hashvalues (subfile (files file))
-                   (aux subfile))
-                 (when (< (size file) threshold)
-                   (incf acc (size file))))))
-      (aux *root-dir*)
-      acc)))
+    (map-file-system (lambda (dir)
+                       (when (< (size dir) threshold)
+                         (incf acc (size dir)))))
+    acc))
+
+(defun missing-memory (wanted)
+  (- wanted
+     (- 70000000
+        (size *root-dir*))))
+
+(defun smallest-to-delete (to-free)
+  (let ((min most-positive-fixnum))
+    (map-file-system (lambda (dir)
+                       (when (< to-free (size dir) min)
+                         (setf min (size dir)))))
+    min))
 
 (defun answer-ex-7-1 ()
   (reset)
   (parse-input "../inputs/input7")
   (all-sizes-below 100000))
 
-(defun answer-ex-7-2 ())
-
-(defun test ()
+(defun answer-ex-7-2 ()
   (reset)
-  (let ((input '("$ cd /"
-                 "$ ls"
-                 "dir a"
-                 "14848514 b.txt"
-                 "8504156 c.dat"
-                 "dir d"
-                 "$ cd a"
-                 "$ ls"
-                 "dir e"
-                 "29116 f"
-                 "2557 g"
-                 "62596 h.lst"
-                 "$ cd e"
-                 "$ ls"
-                 "584 i"
-                 "$ cd .."
-                 "$ cd .."
-                 "$ cd d"
-                 "$ ls"
-                 "4060174 j"
-                 "8033020 d.log"
-                 "5626152 d.ext"
-                 "7214296 k")))
-    (dolist (cmd (split-on-command input))
-      (run-command cmd))
-    (all-sizes-below 100000)))
+  (parse-input "../inputs/input7")
+  (smallest-to-delete (missing-memory 30000000)))
