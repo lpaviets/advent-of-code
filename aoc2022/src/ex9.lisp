@@ -1,13 +1,11 @@
 (in-package #:aoc2022/ex9)
 
-(defparameter *knots* (let ((knots (make-array 10)))
-                        (dotimes (i 10)
+(defparameter *rope-length* 10)
+(defparameter *knots* (let ((knots (make-array *rope-length*)))
+                        (dotimes (i *rope-length*)
                           (setf (aref knots i) (point 0 0)))
                         knots)
-  "Knots are ordered from the HEAD (knot 0) to the end of the
-rope (knot 9)")
-(defparameter *head* (point 0 0))
-(defparameter *tail* (point 0 0))
+  "Knots are ordered starting from the HEAD (knot 0)")
 (defparameter *positions* (make-hash-table :test 'equal :size 200))
 
 (declaim (inline knot (setf knot)))
@@ -18,7 +16,7 @@ rope (knot 9)")
   (setf (aref *knots* i) val))
 
 (defun reset ()
-  (dotimes (i 10)
+  (dotimes (i *rope-length*)
     (setf (knot i) (point 0 0)))
   (setf *positions* (make-hash-table :test 'equal :size 200)))
 
@@ -26,17 +24,6 @@ rope (knot 9)")
   (destructuring-bind (dir . num)
       (split-word-int line)
     (cons (read-from-string dir) num)))
-
-;;;; Debug
-(defun print-grid ()
-  (let ((grid (make-array (list 21 21) :initial-element #\.))
-        (head (knot 0)))
-    (setf (aref grid 11 11) 'H)
-    (dotimes (i 9)
-      (with-point (x y) (sub-point head (knot (1+ i)))
-        (setf (aref grid (+ 11 x) (+ 11 y)) (1+ i))))
-    (print-array grid)
-    nil))
 
 ;;;; Utilities
 ;;;; All functions are passed as argument the "current" knot
@@ -47,34 +34,14 @@ rope (knot 9)")
   (with-point (x y) (diff-with-previous-knot i)
     (<= (max (abs x) (abs y)) 1)))
 
-(defun catch-up (i)
-  (unless (adjacentp i)
-    (with-point (dx dy) (diff-with-previous-knot i)
-      (case (min (abs dx) (abs dy))
-        (0 (setf (knot i) (add-point (knot i)
-                                     (point (truncate dx 2) (truncate dy 2)))))
-        (1 (if (= (abs dx) 2) ;; furthest on x coordinate
-               (setf (knot i) (add-point (knot i)
-                                         (point (truncate dx 2) dy)))
-               (setf (knot i) (add-point (knot i)
-                                         (point dx (truncate dy 2))))))))))
+(declaim (inline one-before))
+(defun one-before (n)
+  (- n (signum n)))
 
-(defun catch-up (i)
-  (unless (adjacentp i)
-    (with-point (dx dy) (diff-with-previous-knot i)
-      (case (min (abs dx) (abs dy))
-        (0 (setf (knot i) (add-point (knot i)
-                                     (point (- dx (signum dx))
-                                            (- dy (signum dy))))))
-        (t
-         (cond
-           ((< (abs dx) (abs dy))
-            (setf (knot i) (add-point (knot i)
-                                      (point dx (- dy (signum dy))))))
-           (t
-            (setf (knot i) (add-point (knot i)
-                                      (point (- dx (signum dx)) dy))))))))))
-
+(defun update-knot-by (i dx dy)
+  (let ((knot (knot i)))
+    (incf (point-x knot) dx)
+    (incf (point-y knot) dy)))
 
 (defun update-head (dir)
   (ecase dir
@@ -83,18 +50,28 @@ rope (knot 9)")
     (U (incf (point-y (knot 0))))
     (D (decf (point-y (knot 0))))))
 
+(defun catch-up (i)
+  (unless (adjacentp i)
+    (with-point (dx dy) (diff-with-previous-knot i)
+      (let ((adx (abs dx))
+            (ady (abs dy)))
+        (cond
+          ((or (= adx ady)
+               (= (min adx ady) 0))
+           (update-knot-by i (one-before dx) (one-before dy)))
+          ((< adx ady)
+           (update-knot-by i dx (one-before dy)))
+          (t                            ; (> adx ady)
+           (update-knot-by i (one-before dx) dy)))))))
+
 (defun update-positions-tracker (i)
   (with-point (x y) (knot i)
    (setf (gethash (cons x y) *positions*) t)))
 
-(defun play-unit-move (dir tracking &optional debug)
-  (when debug (format t "~2&Moving in dir ~S~2%" dir))
+(defun play-unit-move (dir tracking)
   (update-head dir)
-  (dotimes (i 9)
+  (dotimes (i (1- *rope-length*))
     (catch-up (1+ i)))
-  (when debug
-    (print-grid)
-    (terpri))
   (update-positions-tracker tracking))
 
 (defun play-move (dir num tracking)
