@@ -27,6 +27,17 @@ rope (knot 9)")
       (split-word-int line)
     (cons (read-from-string dir) num)))
 
+;;;; Debug
+(defun print-grid ()
+  (let ((grid (make-array (list 21 21) :initial-element #\.))
+        (head (knot 0)))
+    (setf (aref grid 11 11) 'H)
+    (dotimes (i 9)
+      (with-point (x y) (sub-point head (knot (1+ i)))
+        (setf (aref grid (+ 11 x) (+ 11 y)) (1+ i))))
+    (print-array grid)
+    nil))
+
 ;;;; Utilities
 ;;;; All functions are passed as argument the "current" knot
 (defun diff-with-previous-knot (i)
@@ -48,6 +59,22 @@ rope (knot 9)")
                (setf (knot i) (add-point (knot i)
                                          (point dx (truncate dy 2))))))))))
 
+(defun catch-up (i)
+  (unless (adjacentp i)
+    (with-point (dx dy) (diff-with-previous-knot i)
+      (case (min (abs dx) (abs dy))
+        (0 (setf (knot i) (add-point (knot i)
+                                     (point (- dx (signum dx))
+                                            (- dy (signum dy))))))
+        (t
+         (cond
+           ((< (abs dx) (abs dy))
+            (setf (knot i) (add-point (knot i)
+                                      (point dx (- dy (signum dy))))))
+           (t
+            (setf (knot i) (add-point (knot i)
+                                      (point (- dx (signum dx)) dy))))))))))
+
 
 (defun update-head (dir)
   (ecase dir
@@ -60,10 +87,14 @@ rope (knot 9)")
   (with-point (x y) (knot i)
    (setf (gethash (cons x y) *positions*) t)))
 
-(defun play-unit-move (dir tracking)
+(defun play-unit-move (dir tracking &optional debug)
+  (when debug (format t "~2&Moving in dir ~S~2%" dir))
   (update-head dir)
   (dotimes (i 9)
     (catch-up (1+ i)))
+  (when debug
+    (print-grid)
+    (terpri))
   (update-positions-tracker tracking))
 
 (defun play-move (dir num tracking)
@@ -79,17 +110,7 @@ rope (knot 9)")
 
 (defun answer-ex-9-2 ()
   (reset)
-  (let ((moves
-          '((R . 5)
-            (U . 8)
-            (L . 8)
-            (D . 3)
-            (R . 17)
-            (D . 10)
-            (L . 25)
-            (U . 20))
-          ;; (read-file-as-lines "../inputs/input9" :parse 'parse-line)
-          ))
+  (let ((moves (read-file-as-lines "../inputs/input9" :parse 'parse-line)))
     (loop :for (dir . num) :in moves
           :do (play-move dir num 9))
     (hash-table-count *positions*)))
