@@ -2,3 +2,4 @@
 *.py
 *.fasl
 /aoc*/inputs/
+*/src/test
