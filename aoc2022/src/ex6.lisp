@@ -4,7 +4,7 @@
 (defun pos-signal (sig window)
   (loop :for start :below (- (length sig) window)
         :for end = (+ start window)
-        :when (apply #'char/= (coerce (subseq sig i end) 'list))
+        :when (apply #'char/= (coerce (subseq sig start end) 'list))
           :do (return end)))
 
 (defun answer-ex-6-1 ()
