@@ -5,40 +5,29 @@
    (winning :initarg :winning :accessor winning)
    (picked :initarg :picked :accessor picked)))
 
-(defun make-card (num left right)
-  (make-instance 'card :num num :winning left :picked right))
-
 (defun read-card (card)
   (destructuring-bind (card-num left right)
       (ppcre:split "[:|]" card)
-    (make-card (car (collect-integers-in-line card-num))
-               (collect-integers-in-line left)
-               (collect-integers-in-line right))))
-
-(defmacro with-card ((num winning picked) card &body body)
-  `(with-accessors ((,num card-num)
-                    (,winning winning)
-                    (,picked picked))
-       ,card
-     ,@body))
+    (make-instance 'card
+                   :num (car (collect-integers-in-line card-num))
+                   :winning (collect-integers-in-line left)
+                   :picked (collect-integers-in-line right))))
 
 (defun count-matches (card)
-  (with-card (num winning picked) card
-    (let ((common (remove-duplicates (intersection winning picked))))
-      (length common))))
+  (let ((common (remove-duplicates (intersection (winning card) (picked card)))))
+    (length common)))
 
 (defun card-score (card)
-  (let ((matches (count-matches card)))
-    (if (zerop matches) 0 (ash 1 (1- matches)))))
+  (ash 1 (1- (count-matches card))))
 
 ;; Part 2
 (defparameter *cards-to-process* nil)
-(defparameter *cards* nil)
+(defparameter *cards-matches* nil)
 
 (defun initialize-cards (file)
   (let ((cards (read-file-as-lines file :parse 'read-card)))
     (setf *cards-to-process* (mapcar 'card-num cards))
-    (setf *cards* (coerce (cons nil (mapcar 'count-matches cards))
+    (setf *cards-matches* (coerce (cons nil (mapcar 'count-matches cards))
                           'vector)))) ; extra cons to have card-num = index
 
 (defun answer-ex-4-1 ()
@@ -50,5 +39,5 @@
   (loop :while *cards-to-process*
         :for card = (pop *cards-to-process*)
         :count 1
-        :do (dotimes (i (aref *cards* card))
+        :do (dotimes (i (aref *cards-matches* card))
               (push (+ card i 1) *cards-to-process*))))
