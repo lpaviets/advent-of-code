@@ -65,7 +65,7 @@
     (destructuring-bind ((seeds) . almanachs) blocks
       (parse-seeds seeds)
       (setf *almanachs* nil)
-      (mapc 'read-almanach almanachs))))
+      (mapc 'read-almanach (reverse almanachs)))))
 
 ;; Interval is a pair
 ;; Returns a pair (MODIFIED . UNCHANGED)
@@ -120,14 +120,36 @@
                                         (list a s)
                                         (list e b)))
                     (t (list nil (list a b))))))
-      (setf (cdr result) (remove-if (lambda (int)
-                                      (>= (first int) (second int)))
-                                    (cdr result))))))
+      result)))
 
-(defun map-interval-almanach )
+(defun map-interval-almanach (interval almanach)
+  (loop :with remaining = (list interval)
+        :with valids = nil
+        :for range :in (ranges almanach)
+        :do (let ((new-remaining nil))
+              (dolist (int remaining)
+                (destructuring-bind (new-valid . rest)
+                    (map-interval-range int range)
+                  (push new-valid valids)
+                  (setf new-remaining (nconc rest new-remaining))))
+              (setf remaining new-remaining))
+        :finally (return (remove nil (append valids remaining)))))
+
+(defun map-all-intervals-almanach (intervals almanach)
+  (mapcan (lambda (int)
+            (map-interval-almanach int almanach))
+          intervals))
 
 (defun answer-ex-5-1 ()
   (read-file "../inputs/input5.txt")
   (argmin *seeds* :key 'find-seed-location))
 
-(defun answer-ex-5-2 ())
+(defun answer-ex-5-2 ()
+  (read-file "../inputs/input5.txt")
+  (let* ((seeds-ranges (loop :for (start width) :on *seeds* by #'cddr
+                             :collect (list start (+ start width -1))))
+         (locations (reduce 'map-all-intervals-almanach *almanachs*
+                            :initial-value seeds-ranges
+                            :key 'cdr)))
+    (loop :for (a b) :in locations
+          :minimize a)))
