@@ -57,12 +57,74 @@
                                   :ranges ranges)))
     (push (cons (car source-dest) almanach) *almanachs*)))
 
+(defun parse-seeds (seeds)
+  (setf *seeds* (collect-integers-in-line seeds)))
+
 (defun read-file (file)
   (let ((blocks (read-file-as-lines-blocks file)))
     (destructuring-bind ((seeds) . almanachs) blocks
-      (setf *seeds* (collect-integers-in-line seeds)
-            *almanachs* nil)
+      (parse-seeds seeds)
+      (setf *almanachs* nil)
       (mapc 'read-almanach almanachs))))
+
+;; Interval is a pair
+;; Returns a pair (MODIFIED . UNCHANGED)
+;; where MODIFIED is an interval that has
+;; been "remapped" by RANGE, and UNCHANGED is a list of
+;; unchanged intervals that might remain to be mapped by
+;; other ranges in the same map.
+
+;; Case 1: |---------|
+;;         a         b
+;;       |-------------|
+;;       s             e
+;; Returns: ([a+offset, b+offset])
+;;
+;; Case 2: |---------|
+;;         a         b
+;;           |-------------|
+;;           s             e
+;; Returns: ([s+offset, b+offset], [a, s])
+;;
+;; Case 3: |---------|
+;;         a         b
+;;       |--------|
+;;       s        e
+;; Returns: ([a+offset, e+offset], [e, b])
+;;
+;; Case 4: |---------|
+;;         a         b
+;;           |-----|
+;;           s     e
+;; Returns: ([s+offset, e+offset], [a, s], [e, b])
+;;
+;; Case 5: |---------|
+;;         a         b
+;;                       |-------------|
+;;                       s             e
+;; Returns: (NIL, [a, b])
+
+(defun map-interval-range (interval range)
+  (let ((a (first interval))
+        (b (second interval))
+        (s (start range))
+        (e (end range))
+        (offset (offset range)))
+    (let ((result (cond
+                    ((<= s a b e) (list (list (+ a offset) (+ b offset))))
+                    ((<= a s b e) (list (list (+ s offset) (+ b offset))
+                                        (list a s)))
+                    ((<= s a e b) (list (list (+ a offset) (+ e offset))
+                                        (list e b)))
+                    ((<= a s e b) (list (list (+ s offset) (+ e offset))
+                                        (list a s)
+                                        (list e b)))
+                    (t (list nil (list a b))))))
+      (setf (cdr result) (remove-if (lambda (int)
+                                      (>= (first int) (second int)))
+                                    (cdr result))))))
+
+(defun map-interval-almanach )
 
 (defun answer-ex-5-1 ()
   (read-file "../inputs/input5.txt")
