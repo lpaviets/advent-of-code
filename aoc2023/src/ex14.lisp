@@ -22,6 +22,14 @@
                                (aref grid last-rock j) obj)))))
   grid)
 
+;;; Not rotating in place
+;;; If we want to rotate in place, letting h = (height grid):
+;;; (i,j) -> (j, (h - i - 1))
+;;;       -> ((h - i - 1), (h - j - 1))
+;;;       -> ((h- j -1), i)
+;;;       -> (i, j) (loop)
+;;;
+;;; But this is hard: those cycles are not easily computable
 (defun rotate-grid (grid)
   (let ((new-grid (make-array (reverse (array-dimensions grid))))
         (height (array-dimension grid 0)))
