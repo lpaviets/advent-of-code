@@ -16,17 +16,6 @@
 (defun compare-cards (a b &optional (order *card-order*))
   (< (position a order) (position b order)))
 
-(defun lexicographic< (seq1 seq2 &optional (predicate #'<))
-  (let ((seq1 (coerce seq1 'list))
-        (seq2 (coerce seq2 'list)))
-    (loop :for (a . rest1) :on seq1
-          :for (b . rest2) :on seq2
-          :when (funcall predicate b a)
-            :do (return nil)
-          :when (funcall predicate a b)
-            :do (return t)
-          :finally (return (if rest2 t nil)))))
-
 (defun compare-signature (sig-1 sig-2)
   (lexicographic< (car sig-1) (car sig-2)))
 
