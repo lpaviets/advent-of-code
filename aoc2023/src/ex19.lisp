@@ -71,7 +71,7 @@
 LABEL having INTERVAL instead, and whose workflow is now NEW-WORKFLOW."
   (make-instance 'range
                  :workflow new-workflow
-                 :ranges (let ((new-ranges (copy-list (ranges range))))
+                 :ranges (let ((new-ranges (deepcopy (ranges range))))
                            (setf (second (assoc label new-ranges)) interval)
                            new-ranges)))
 
@@ -81,16 +81,17 @@ LABEL having INTERVAL instead, and whose workflow is now NEW-WORKFLOW."
            (cur-label-range (second cur-label))
            (inter (interval-intersection workflow-range
                                          cur-label-range))
-           (compl (car (interval-complement cur-label-range
-                                            workflow-range))))
+           (compl (car (interval-complement workflow-range
+                                            cur-label-range))))
       (when inter
         (push (copy-replace-range range new-workflow label inter) *ranges*))
       (when compl
-        (copy-replace-range range new-workflow label compl)))))
+        (copy-replace-range range nil label compl)))))
 
 (defun split-range-workflow (range workflow)
-  (loop :for current = range :then (apply-workflow-rule-range range rule)
+  (loop :for current = range :then (apply-workflow-rule-range current rule)
         :for rule :in (rules workflow)
+        :while current
         :finally (when current
                    (setf (workflow current) (default workflow))
                    (push current *ranges*))))
@@ -108,7 +109,7 @@ LABEL having INTERVAL instead, and whose workflow is now NEW-WORKFLOW."
             :sum (reduce '+ part :key 'second))))
 
 (defun answer-ex-19-2 ()
-  (mapc 'parse-rules (first (read-file-as-lines-blocks "test.txt")))
+  (mapc 'parse-rules (first (read-file-as-lines-blocks "../inputs/input19.txt")))
   (let ((default-interval (make-interval 1 4000)))
     (setf *ranges* (list
                     (make-instance 'range
@@ -121,8 +122,7 @@ LABEL having INTERVAL instead, and whose workflow is now NEW-WORKFLOW."
         :for wf = (and range (workflow range))
         :while range
         :if (eq wf 'a)
-          :do (print range)
-          :and :sum (range-total-size range)
+          :sum (range-total-size range)
         :else
           :unless (eq wf 'r)
             :do (split-range-workflow range (gethash wf *workflows*))))
