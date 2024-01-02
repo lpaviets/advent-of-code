@@ -145,8 +145,8 @@
         :for v :across *valves/useful*
         :do (dfs #'next-useful-valves
                  (make-initial-vertex initial-time initial-vertex i)
-                 :at-vertex (lambda (v parent cost)
-                              (declare (ignorable cost))
+                 :at-vertex (lambda (v parent cost visited)
+                              (declare (ignorable cost visited))
                               (let ((new-score (nth 3 v)))
                                 (when (< max-score new-score)
                                   (setf max-score new-score)
@@ -220,8 +220,8 @@ SCORE is the current score"
         (format t "Starting with human at ~2D, elephant at ~2D~%" i j)
         (dfs #'next-useful-valves-elephant
              (make-initial-vertex-elephant initial-time initial-vertex i j)
-             :at-vertex (lambda (v parent cost)
-                          (declare (ignorable parent cost))
+             :at-vertex (lambda (v parent cost visited)
+                          (declare (ignorable parent cost visited))
                           (let ((new-score (nth 5 v)))
                             (when (< max-score new-score)
                               (setf max-score new-score)))))))
