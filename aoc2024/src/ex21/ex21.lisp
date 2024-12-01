@@ -1,9 +1,9 @@
 (in-package #:aoc2024/ex21)
 
-(defparameter *input* "input")
-(defparameter *test* "test")
+(defparameter *input* #P"input")
+(defparameter *test* #P"test")
 
-(defun answer-ex-21-1 ())
+(defun answer-ex-21-1 (file))
 
-(defun answer-ex-21-2 ())
+(defun answer-ex-21-2 (file))
 
