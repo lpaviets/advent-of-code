@@ -3,12 +3,23 @@
 (defparameter *input* #P"input")
 (defparameter *test* #P"test")
 
+(defun collect-word (puzzle size sx sy dx dy)
+  (coerce (loop :repeat size
+                :for x = sx :then (+ x dx)
+                :for y = sy :then (+ y dy)
+                :while (array-in-bounds-p puzzle x y)
+                :collect (aref puzzle x y))
+          'string))
+
 (defun match-xmas-at (puzzle i j di dj)
-  (loop :for c :across "XMAS"
-        :for x = i :then (+ x di)
-        :for y = j :then (+ y dj)
-        :while (array-in-bounds-p puzzle x y)
-        :always (char= c (aref puzzle x y))))
+  (string= (collect-word puzzle 4 i j di dj) "XMAS"))
+
+(defun crossing-mas-at (puzzle i j)
+  (let ((first (collect-word puzzle 3 (1- i) (1- j) 1 1))
+        (second (collect-word puzzle 3 (1- i) (1+ j) 1 -1))
+        (words '("MAS" "SAM")))
+    (and (member first words :test 'string=)
+         (member second words :test 'string=))))
 
 (defun answer-ex-4-1 (file)
   (let ((puzzle (read-file-as-array file))
@@ -23,4 +34,11 @@
     res))
 
 
-(defun answer-ex-4-2 (file))
+(defun answer-ex-4-2 (file)
+  (let ((puzzle (read-file-as-array file))
+        (res 0))
+    (do-array (i j x puzzle)
+      (when (and (char= x #\A)
+                 (crossing-mas-at puzzle i j))
+        (incf res)))
+    res))
