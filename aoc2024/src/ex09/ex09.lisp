@@ -11,66 +11,81 @@
       (setf (aref array i) (digit-char-p (char string i))))
     array))
 
-(defclass disk-block ()
-  ((id :accessor id :initarg :id)
-   (size :accessor size :initarg :size)
-   (startpos :accessor startpos :initarg :startpos)
-   (filep :accessor filep :initarg :filep)))
+(defun input-to-memdump (blocks)
+  (let* ((total-size (reduce '+ blocks))
+         (memdump (make-array total-size :initial-element nil))
+         (free-blocks nil)
+         (file-blocks nil))
+    (loop :for start = 0 :then (+ start size)
+          :for size :across blocks
+          :for filep = t :then (not filep)
+          :for id = 0 :then (if filep id (1+ id))
+          :do (dotimes (i size)
+                (setf (aref memdump (+ start i)) (cons id filep)))
+              (if filep
+                  (push (list id size start) file-blocks)
+                  (push (list id size start) free-blocks)))
+    (values memdump file-blocks (reverse free-blocks))))
 
-(defun make-disk-block (id size startpos filep)
-  (make-instance 'disk-block :id id
-                             :size size
-                             :startpos startpos
-                             :filep filep))
+(defun move-blocks (memdump)
+  (loop :with idx-free = (position nil memdump :key 'cdr)
+        :with idx-file = (position t memdump :key 'cdr :from-end t)
+        :for id-file = (car (aref memdump idx-file))
+        :do (setf (aref memdump idx-free) (cons id-file t))
+            (setf (aref memdump idx-file) (cons id-file nil))
+            (setf idx-free (position nil memdump :key 'cdr :start (1+ idx-free)))
+            (setf idx-file (position t memdump :key 'cdr :end idx-file :from-end t))
+        :while (< idx-free idx-file))
+  memdump)
 
-;; Return ID, SIZE-OF-BLOCK
-(defun read-block (disk start)
-  (let* ((id (aref disk start))
-         (pos (position id disk :start start :test '/=)))
-    (list id (- (or pos (length disk))
-                start))))
+(defun show-memdump (memdump)
+  (loop :for (id . filep) :across memdump
+        :do (if filep
+                (format t "~D" id)
+                (format t ".")))
+  (terpri)
+  (force-output))
 
-(defun read-all-blocks (disk)
-  (loop :with total-size = (length disk)
-        :for block-file-p = t :then (not block-file-p)
-        :for start = 0 :then next-start
-        :for (id size) = (read-block disk start)
-        :for next-start = (+ start size)
-        :for block = (make-disk-block id size start block-file-p)
-        :collect block :into all-blocks
-        :unless block-file-p
-          :collect block :into free-blocks
-        :while (< next-start total-size)
-        :finally (return (list all-blocks free-blocks))))
+(defun move-block-at-once (memdump block-to-move free-blocks)
+  (loop :with (idm sizem startm) = block-to-move
+        :for free-block :in free-blocks
+        :for (idf sizef startf) = free-block
+        :until (<= startm startf)
+        :when (<= sizem sizef)
+          :do (dotimes (i sizem)
+                (setf (aref memdump (+ startf i)) (cons idm t))
+                (setf (cdr (aref memdump (+ startm i))) nil)
+                (setf (second free-block) (- sizef sizem)
+                      (third free-block) (+ startf sizem)))
+              (loop-finish)))
 
-(defmacro with-disk-block ((id size start filep) block &body body)
-  (with-gensyms ((gblock block))
-    `(symbol-macrolet ((,id (car ,gblock))
-                       (,size (cadr ,gblock))
-                       (,start (caddr ,gblock))
-                       (,filep (cadddr ,gblock)))
-       ,@body)))
+(defun move-all-blocks-at-once (memdump file-blocks free-blocks)
+  (loop :for block-to-move :in file-blocks
+        :do (move-block-at-once memdump block-to-move free-blocks)
+            (when (zerop (second (car free-blocks)))
+              (pop free-blocks))        ; small opt: delete first free
+            ;;            (show-memdump memdump)
+        ))
 
-;; (defun move-block (file-blocks-rev free-blocks)
-;;   (with-disk-block (id size start filep) (aref disk from)
-;;     ()
-;;     (loop :with remaining = size
-;;           :for move-to = to :then (+ to 2)
-;;           :while (plusp remaining)
-;;           :do (with-disk-block (id-to size-to start-to filep-to)
-;;                                (aref disk move-to)
-;;                 (when (plusp size-to)
-;;                   (setf id-to id)
-;;                   (setf filep t)
-;;                   (decf size size-to)
-;;                   (decf (third (aref disk (1+ to))))
-;;                   (incf (fourth )))))))
+(defun answer-ex-9-1 (file)
+  (let* ((blocks (parse-file file))
+         (memdump (input-to-memdump blocks)))
+    (move-blocks memdump)
+    (loop :for (id . filep) :across memdump
+          :for i :from 0
+          :while filep
+          :sum (* i id))))
 
-
-(defun move-block (file-block-queue free-blocks)
-  (destructuring-bind (id size start) (queue-peek file-blocks-queue)
-    ()))
-
-(defun answer-ex-9-1 (file))
-
-(defun answer-ex-9-2 (file))
+(defun answer-ex-9-2 (file)
+  (let* ((blocks (parse-file file)))
+    (multiple-value-bind (memdump file-blocks free-blocks)
+        (input-to-memdump blocks)
+      ;;      (format t "Start function:~%")
+      ;;      (show-memdump memdump)
+      (move-all-blocks-at-once memdump file-blocks free-blocks)
+      ;;     (format t "Finished moving blocks:~%")
+      ;;     (show-memdump memdump)
+      (loop :for (id . filep) :across memdump
+            :for i :from 0
+            :when filep
+              :sum (* i id)))))
