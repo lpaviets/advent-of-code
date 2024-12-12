@@ -7,23 +7,14 @@
   (read-file-as-array file))
 
 ;; Way simpler solution than what I did: loop by lines, then by columns.
-;; Keep track of the "current region"
-;;
-
-(defun plot-region-neighbours (plot garden)
-  (loop :with plant = (grid-at plot garden)
-        :for nghb :in (grid-neighbours plot garden)
-        :for nghb-plant = (grid-at nghb garden)
-        :when (eql plant nghb-plant)
-          :collect nghb))
-
+;; Keep track of the "current region" and add 1 when region changes.
 (defun graph-edges-from-garden (garden)
-  (let ((cache-array (make-array (array-dimensions garden) :initial-element nil)))
-    (do-array (i j x garden)
-      (loop :for nghb :in (plot-region-neighbours (list i j) garden)
-            :do (push (cons nghb 1) (aref cache-array i j))))
-    (lambda (pos)
-      (apply 'aref cache-array pos))))
+  (make-graph-from-grid garden
+                        :cost (lambda (p1 p2)
+                                (if (char= (grid-at p1 garden)
+                                           (grid-at p2 garden))
+                                    1
+                                    nil))))
 
 (defun count-plot-borders (plot garden)
   (let* ((neighbours (grid-neighbours plot garden))
