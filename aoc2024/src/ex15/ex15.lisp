@@ -97,14 +97,6 @@
       ((right-box-p box) (grid-pos-in-direction pos :left))
       (t (error "Not a box")))))
 
-;; Algo to move:
-;; - If free: move
-;; - If wall: don't move, say it
-;; - If box(es): move them, then move
-;;
-;; - Difficulty: moving left/right does not follow the same rules as up/down
-;; - Good thing: left/right "algo" from P1 works
-
 ;; Returns the first free position after a bunch of boxes, or NIL if we hit a
 ;; wall first.
 (defun push-wide-boxes-to (pos dir grid)
@@ -147,26 +139,15 @@
 
 ;; Try to move a box. Return T if something changed in the config, NIL
 ;; otherwise.
+;; Idea: try to "push" the two sides of the box:
+;; - If the two next cells are free: we can move.
+;; - If any of the two is a wall: we can't move
+;; - Otherwise, there are boxes in front of us:
+;;   - Try to move them all, but don't actually move them
+;;   - If all can be moved, then we can move too
+;; The PRETEND optional arg *simulates* the push if non-NIL.
 
-(defun move-wide-boxes-vertically (pos dir grid)
-  (when (wide-box-p (grid-at pos grid))
-    (let* ((other (wide-box-other pos grid))
-           (next-pos (grid-pos-in-direction pos dir))
-           (next-other (grid-pos-in-direction other dir))
-           (all-next (list (grid-at next-pos grid)
-                           (grid-at next-other grid))))
-      (cond
-        ;; All free: move directly
-        ((every 'freep all-next)
-         (%move-box-vertically-no-check pos other next-pos next-other grid))
-        ;; No walls, some boxes to push: try to move them sequentially, then if
-        ;; anything changed, try again. Expensive but easy.
-        ((not (some 'wallp all-next))
-         (let ((moved-1 (move-wide-boxes-vertically next-pos dir grid))
-               (moved-2 (move-wide-boxes-vertically next-other dir grid)))
-           (when (or moved-1 moved-2)
-             (move-wide-boxes-vertically pos dir grid))))
-        (t nil)))))
+;; TODO: Rewrite move-wide-boxes-vertically
 
 (defun move-wide-boxes (pos dir grid)
   (if (member dir '(:up :down))
@@ -225,12 +206,13 @@
   (destructuring-bind (grid instrs)
       (parse-wide-instructions file)
     (when debug (print-array grid))
-    (loop :with initial-pos = (find-robot grid)
+    (loop :repeat 1000
+          :with initial-pos = (find-robot grid)
           :for pos = initial-pos :then next-pos
           :for dir :in instrs
           :for next-pos = (move-robot-wide-boxes pos dir grid)
           :do (when debug (format t "~6%Move ~A:~%" dir)
                     (print-array grid)
-                    (sleep 0.05)))
+                    (sleep 0.3)))
     (when debug (print-array grid))
     (gps-wide-coordinates grid)))
