@@ -21,16 +21,28 @@
 (defun compute-circuits (boxes)
   (let* ((distances (all-distances boxes))
          (keep-edges (subseq distances 0 1000))
-         (edges-table (make-hash-table :test 'equalp)))
+         (edges-table (make-hash-table :test 'equal)))
     (loop :for (box1 box2 dist) :in keep-edges
-          :do (push (cons box2 dist) (gethash box1 edges-table)))
+          :do (push (cons box2 dist) (gethash box1 edges-table))
+              (push (cons box1 dist) (gethash box2 edges-table)))
     (flet ((edges (box)
              (gethash box edges-table)))
-      (let ((circuits (connected-components boxes #'edges :test 'equalp)))
-        ;; (reduce '* (sort (mapcar 'hash-table-count circuits) '>) :end 3)
-        circuits
-        ))))
+      (connected-components boxes #'edges :test 'equal))))
 
-(defun answer-ex-8-1 (file))
+(defun build-connected-circuits (boxes)
+  (let ((distances (all-distances boxes))
+        (circuits (uf-initialize boxes :test 'equal :strategy :size)))
+    ;; Distances are already sorted
+    (loop :while (< 1 (hash-table-count (uf-representatives circuits)))
+          :for (box1 box2 distance) :in distances
+          :do (uf-union circuits box1 box2)
+          :finally (return (* (car box1) (car box2))))))
 
-(defun answer-ex-8-2 (file))
+(defun answer-ex-8-1 (file)
+  (let* ((boxes (read-boxes file))
+         (circuits (compute-circuits boxes))
+         (circuits-size (mapcar 'hash-table-count circuits)))
+    (reduce '* (sort circuits-size '>) :end 3)))
+
+(defun answer-ex-8-2 (file)
+  (build-connected-circuits (read-boxes file)))
