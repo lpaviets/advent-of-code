@@ -29,15 +29,26 @@
           (parse-buttons (as-sexp buttons) (length lights))
           (as-sexp rest))))
 
-;; (defun match-lights-pattern (lights buttons)
-;;   (let* ((n (length lights))
-;;          (try (make-array n :element-type 'bit :initial-element 0)))
-;;     (dotimes (k n)
-;;       (do-sequence-subsets (pushed (k buttons) 'list)
-;;         (dolist (button pushed)
-;;           (dotimes (i n)
-;;             ()))))))
+(defun read-instructions (file)
+  (read-file-as-lines file :parse 'parse-line))
 
-(defun answer-ex-10-1 (file))
+(defun matches-p (lights selected)
+  (let ((n (length lights)))
+    (loop :for i :below n
+          :for light-on-p = (aref lights i)
+          :for selected-on-p = (loop :for button :across selected
+                                     :sum (aref button i))
+          :always (= light-on-p (mod selected-on-p 2)))))
+
+(defun match-lights-pattern (lights buttons)
+  (let ((n (length lights)))
+    (dotimes (k (1- n))
+      (do-sequence-subsets (pushed ((1+ k) buttons))
+        (when (matches-p lights pushed)
+          (return-from match-lights-pattern (1+ k)))))))
+
+(defun answer-ex-10-1 (file)
+  (loop :for (lights buttons) :in (read-instructions file)
+        :sum (match-lights-pattern lights buttons)))
 
 (defun answer-ex-10-2 (file))
